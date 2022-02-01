@@ -1,14 +1,18 @@
+#!/bin/bash
 #vary this and see what effect it has on the output
 
 #debbies python script
-UTIL=/mnt/dv/wid/projects7/Roy-Aspergillus/Programs/aspergillusNetworkDiffusion/get_kernel_scores.py
+UTIL=get_kernel_scores.py
 
-gene_index=/mnt/dv/wid/projects7/Roy-Aspergillus/Programs/aspergillusNetworkDiffusion/network_files/aspergillus_network_I02_node_index.txt
-edge_list=/mnt/dv/wid/projects7/Roy-Aspergillus/Programs/aspergillusNetworkDiffusion/network_files/aspergillus_network_I02_edge_list.txt
+#Point to previously generated files. 
+gene_index=node_index.txt
+edge_list=edge_list.txt
 
-lambda=$1
-original_scores=$2
-outfile=$3
+
+
+lambda=$1         #Hyperparameter setting larger lambda results in more diffusion.
+original_scores=$2      # File containing a list of orginal scores. Format <geneName>/t<initialScore>.
+outfile=$3        #Outfile name. 
 
 #check if scores exists
 scores=nodeDiffusion_Input.txt
