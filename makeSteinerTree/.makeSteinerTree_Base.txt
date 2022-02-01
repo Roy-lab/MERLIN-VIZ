@@ -1,0 +1,9 @@
+PATHWAY=$1
+
+INFILE=${HEADDIR}/input/${PATHWAY}.txt
+
+EXE=makeSteinerTree
+
+mkdir ${HEADDIR}/${PATHWAY}
+
+${EXE} ${INPUT} $INFILE ${HEADDIR}/${PATHWAY}/${PATHWAY}
