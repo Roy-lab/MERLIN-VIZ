@@ -11,8 +11,8 @@ Compilation:
 Use all C++ template library objects and c++11 script. To compile run "make makeSteinerTree"
 
 Inputs:
-./makeSteinerTree <network_file> <interesting_node_list> <start_node> <output_file>
-./makeSteinerTree Input/output_net_0_8_sorted.txt Input/Mac_A_test.txt AFUA_1G13190 Outfile/out
+./makeSteinerTree <network_file> <interesting_node_list> <output_file>
+./makeSteinerTree Input/output_net_0_8_sorted.txt Input/Mac_A_test.txt Outfile/out
 
 network_file: Contains a list of edges needed for a graph. Each line contain a source node fallowed by a target node. Nodes can be labeled as string. example: Input/output_net_0_8_sorted.txt
 
