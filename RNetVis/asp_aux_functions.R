@@ -1,14 +1,15 @@
 library(tidyverse)
 library(tidygraph)
+library(pracma)
 
 
-all_nodes_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_nodes.txt"
-edge_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/output_net_0_8.txt"
-module2gene_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset.txt"
-module_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset_enrichAnalyzer.txt"
-go_file = "/Volumes/wid/projects7/Roy-Aspergillus/Data/GeneOntology/GO_enrichAnalyzer_idx/afumgotermap.txt"
-regulator_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments/merlin.0_8.0_3_details.txt"
-go_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments/go.0_3_details.txt"
+#all_nodes_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_nodes.txt"
+#edge_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/output_net_0_8.txt"
+#module2gene_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset.txt"
+#module_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset_enrichAnalyzer.txt"
+##go_file = "/Volumes/wid/projects7/Roy-Aspergillus/Data/GeneOntology/GO_enrichAnalyzer_idx/afumgotermap.txt"
+#regulator_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments/merlin.0_8.0_3_details.txt"
+#go_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments/go.0_3_details.txt"
 
 
 ################### Make R Data Files *Only need to run once###################
@@ -57,13 +58,12 @@ edges <- edges %>%
 ### Make Tidy Graph Structure 
 Net <- tbl_graph(nodes= nodes, edges = edges)
 Net <- Net %>%
-  convert(to_undirected) %N>%
-  mutate(degree = centrality_degree()) %>%
+  convert(to_undirected) %>%
   mutate(neighbors = map_local(order = 1, .f = function(neighborhood, node, ...) {
          as_tibble(neighborhood, active = 'nodes')$feature
       }))
-
-
+degree_v <-  Net %N>% as_tibble() %>% rowwise() %>% summarize(length(neighbors)) -1
+Net <- Net %>% mutate(degree = degree_v$`length(neighbors)`)
 
 ### Generate Module Structure 
 Module <- read_tsv(module_file, c("module", "gene_list"))  
@@ -97,16 +97,44 @@ Module <- Module %>%
 Module$module <- strtoi(str_replace_all(Module$module, "Cluster", ""))
 
 module_ids <- Module %>% pull(module)
+enrich_2_module <- Module %>% select(module, GO) %>% unnest(GO) %>% select(go, module) %>% group_by(go) %>% chop(module)
+
 enriched_go_terms <- enrich_2_module %>%
 pull(go)
 
-enrich_2_module <- Module %>% select(module, GO) %>% unnest(GO) %>% select(go, module) %>% group_by(go) %>% chop(module) 
+ 
 genes <- unique(Net %N>% as_tibble() %>% pull(feature))
 
 save(list = c("Net", "Module", "enriched_go_terms", "module_ids","enrich_2_module", "genes"), file = "net_data.Rdata")
 
 
 return(list(Net, Module, enriched_go_terms, module_ids, enrich_2_module, genes)) 
+}
+
+
+makeLaplacian <- function(Net){
+  degree_vec <- Net %N>% pull(degree)
+  D <- diag(degree_vec)
+  adj = matrix(0, length(degree_vec), length(degree_vec))
+  Edges <- Net %E>% as_tibble()
+  from <- Edges %>% pull(from)
+  to <- Edges %>% pull(to)
+  for(i in 1:length(from)){
+    adj[from[i], to[i]]= 1
+    adj[to[i], from[i]]= 1
+  }
+  L <- D - adj;
+  save(list = c("Net", "Module", "enriched_go_terms", "module_ids","enrich_2_module", "genes", "L"), file = "net_data.Rdata")
+  return(L)
+}
+
+
+MakeKernel <- function(L, lambda){
+  num_nodes <- size(L)[1]
+  I <- eye(num_nodes)
+  inside <- I + lambda*L
+  kernel <- inv(inside)
+  return(kernel)
 }
 
 ###############################################################################
@@ -160,10 +188,52 @@ searchForGeneList <-function(Net,Module, gene_list){
 return(unique(genes))
 }
 
+computeEnrichment <- function(Module, gl, num_genes){
+    Module <- Module %>% rowwise() %>% 
+      mutate(m_size = length(gene_list)) %>%
+      mutate(intersect_size = length(intersect(gl, gene_list))) %>%
+      mutate(enrich_pval = phyper(intersect_size, length(gl), num_genes, m_size, lower.tail=FALSE)) %>%
+      mutate(corrected_pval = ifelse(enrich_pval * dim(Module)[1] < 1, enrich_pval * dim(Module)[1], 1))
+    return(Module)
+}
+
+########################## Node Diffusion #####################################
+
+generateScoreVector <- function(Net, gene_list){
+  nodes <- Net %N>% as_tibble() %>% select(feature)
+  scores <- left_join(nodes, Net %N>% as_tibble() %>% 
+    filter(str_detect(feature, paste(unlist(gene_list), collapse="|"))) %>%
+    select(feature) %>% 
+    mutate(score = 100)) %>% 
+    mutate (score = replace_na(score, 0))
+  return(scores$score)
+}
+
+
+loadScoreVector <- function(Net, score_data) {
+  nodes <- Net %N>% as_tibble() %>% mutate(score = 0)
+  for( i in 1:length(score_data[[1]])){ 
+    nodes <- nodes %>%
+      mutate(score = replace(score, 
+             str_detect(feature, score_data %>% slice(i) %>% pull(feature)),
+             score_data %>% slice(i) %>% pull(score)))
+  }
+  return(nodes$score)
+}
+
+computeDiffusionScore <- function (Net, score_data, kernel){
+  score <- loadScoreVector(Net, score_data)
+  diff_score <- kernel %*% score
+  Net <- Net %N>% mutate("score" = as.vector(diff_score))
+  return(Net)
+}
+
+
+
 ###############################################################################
 ##################### Subgraph Functions ######################################
 ###############################################################################
-moduleSubgraph <- function(Module, module_id){
+moduleSubgraph <- function(Net, Module, module_id){
   mod_genes <- searchForModule(Module, module_id)
   sub_graph <-induceSubraph(Net, mod_genes)
   return(sub_graph)
@@ -191,6 +261,12 @@ goSubgraph <- function(Net, Module, enrich_2_module, go_term){
   }
   sub_graph <- induceSubraph(Net, mod_genes)
   return(sub_graph)
+}
+
+diffScoreSubgraph <- function(Net, percentile){
+  val <- quantile(Net %N>% pull(score), probs = percentile)
+  genes <- Net %N>% filter(score >= val) %>% pull(feature)
+  subgraph <- induceSubraph(Net, genes)
 }
 
 induceSubraph <- function(Net, list){
@@ -384,10 +460,15 @@ printNodeInfo <- function(Net, node_name){
   }
 }
 
-printModuleInfo <- function(Module, module_id, gene_list){
+printModuleInfo <- function(Module, module_id, gene_list, genes){
   if(is.na(module_id)){
     return(" ")
   }else{
+    
+    if(!is_empty(gene_list)){
+      Module<-computeEnrichment(Module, gene_list, length(genes))
+    }
+    
     module_info <- Module %>%
       filter(module == module_id)
     
@@ -439,24 +520,38 @@ printModuleInfo <- function(Module, module_id, gene_list){
                       go_text)  
       
     }else{
-      text <- sprintf("Module Name: %s<br/>Genes from gene list: %s <br/>Module Genes: %d<br/>Gene List Enrichment<br/><br/>Enriched Regulators:<br/>%s<br/><br/>Enriched GO: %s <br/><br/>", 
-                      node_name, node_id, 
-                      paste(unlist(node_data$go), collapse = ', '), 
-                      paste(unlist(neighbors), collapse = ', '))  
+      text <- sprintf("Module Name: %s<br/>module enrichment p-value: %.02e<br/>module corrected p-value: %.02e<br/>Genes from gene list: %s<br/>Module Genes: %s<br/><br/>Enriched Regulators:<br/>%s<br/><br/>Enriched GO: %s <br/><br/>", 
+                      module_id, 
+                      module_info$enrich_pval, 
+                      module_info$corrected_pval, 
+                      paste(ifelse( length(intersect(module_info$gene_list[[1]], gene_list)) > 0, unlist(intersect(module_info$gene_list[[1]], gene_list)), ""), collapse = ', '),
+                      paste(unlist(module_info$gene_list), collapse = ', '),
+                      regulator_text, 
+                      go_text)  
     }
     return(text)
   }
 }
 
-printAllModuleInfo <- function(SubNet, Module, gene_list){
- text_info<-""
- unique_modules <-unique(SubNet %N>% 
+printAllModuleInfo <- function(SubNet, Module, gene_list, genes){
+ if(!is_empty(gene_list)){
+   text_info<-""
+   unique_modules <-unique(SubNet %N>% 
+                             as_tibble() %>%
+                             pull(module))
+   
+   for(id in unique_modules){
+     text_info<- sprintf('%s %s', text_info, printModuleInfo(Module, id, gene_list, genes))
+   }
+ }else{
+  text_info<-""
+  unique_modules <-unique(SubNet %N>% 
    as_tibble() %>%
    pull(module))
- for(id in unique_modules){
+  for(id in unique_modules){
    text_info<- sprintf('%s %s', text_info, printModuleInfo(Module, id, list()))
+  }
  }
-
  return(text_info)
 }
 
@@ -468,3 +563,5 @@ getModuleID <- function(Net, node_name){
   print(module_id)
   return(module_id)
 }
+
+
