@@ -7,7 +7,7 @@ library(scales)
 
 ## Load in aux functions and data
 load('net_data.Rdata')
-source('asp_aux_functions.R')
+source('aux_functions.R')
 MyClickScript <- 'Shiny.setInputValue("node_name", d.name)'
 
 
