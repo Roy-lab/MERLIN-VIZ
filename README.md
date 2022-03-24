@@ -21,11 +21,11 @@ Finally, an approximate Steiner tree search function has been provided to try an
 
 During any visualization, the user can gain additional information about the module and the node by clicking on the a node of interest. This will automatically print the Node Info and Module info to screen. The user can then download this information to file. When more than 1 module is displayed, all module information can be downloaded at once. This would be equivelent to the the searchForModule function that I have been using in the past. 
 
-Notes on implementation and in lab usage: 
+# Notes on implementation and in lab usage: 
 
 The GUI was intended for use by biologist who don't want to interact with a command line interface. However, since all functions used in the GUI are implemented in an independent R file, this file can be sourced into an R command line interface and used to perform all tasks indepedently of the GUI. A list of functions is below:
 
-makePostProcessDataStruct(all_nodes_files, edge_list_files, module2gene_files, go_files, module_file, regulator_enrich_file, go_enrich_file): Used to generate two tidyverse data structures that contain all information about the network. The first is a tidygraph containing all merlin edges and nodes, the number of neighbors of each node, a list of neigbhors for each node, the module assignment of node, and the edge confidence. This allows for easy search and use fo the tidygraph algorithm sweet to manipulate data. The second is a Module structure that contains all module information. This is used for efficient lookup of module features.  The function automatically saves this into an Rdata file for later loading. 
+**makePostProcessDataStruct(all_nodes_files, edge_list_files, module2gene_files, go_files, module_file, regulator_enrich_file, go_enrich_file)**: Used to generate two tidyverse data structures that contain all information about the network. The first is a tidygraph containing all merlin edges and nodes, the number of neighbors of each node, a list of neigbhors for each node, the module assignment of node, and the edge confidence. This allows for easy search and use fo the tidygraph algorithm sweet to manipulate data. The second is a Module structure that contains all module information. This is used for efficient lookup of module features.  The function automatically saves this into an Rdata file for later loading. 
 
 all_node_files: A list of genes used in inference. I have included genes that do not have any edges as they may be in a module. 
 
@@ -39,56 +39,58 @@ regulator_enrich_file: The regulator enrichment of MERLIN modules
 
 go_enrich_file: The go enrichment of MERLIN modules. 
 
-makeLaplacian(Net): Generates the laplacian of the graph. Requires the Net object from makePostProcessDataStruct.
+**makeLaplacian(Net)**: Generates the laplacian of the graph. Requires the Net object from makePostProcessDataStruct.
 
-MakeKernel(L, lambda): Generates a diffusion kernel from laplacian with hyperparameter lambda. These can be saved and loaded for later use.
+**MakeKernel(L, lambda)**: Generates a diffusion kernel from laplacian with hyperparameter lambda. These can be saved and loaded for later use.
 
 Search functions
 
-searchForModules(Module, moduleID): Returns a list of genes that are related to a module. Thes include the regulators of the module and genes in the module.
+**searchForModules(Module, moduleID)**: Returns a list of genes that are related to a module. Thes include the regulators of the module and genes in the module.
 
-searchForGenes(Net, Module, gene): Returns a list of genes related to a gene of interest. This inlcudes genes within the neighborhood of the gene, all module genes. 
+**searchForGenes(Net, Module, gene)**: Returns a list of genes related to a gene of interest. This inlcudes genes within the neighborhood of the gene, all module genes. 
 
-searchForGeneList(Net, Module, gene_list): Return the search for genes for a list of genes given by gene_list. 
+**searchForGeneList(Net, Module, gene_list)**: Return the search for genes for a list of genes given by gene_list. 
 
-computeEnrichment(Module, gl, num_genes): Computes the module enrichment for a list of genes gl. The number of genes in gl also needs to be provided. The enrichment is computed via the hypergeometric test and corrected via bonferonni correction. 
+**computeEnrichment(Module, gl, num_genes)**: Computes the module enrichment for a list of genes gl. The number of genes in gl also needs to be provided. The enrichment is computed via the hypergeometric test and corrected via bonferonni correction. 
 
-Diffusion Functions
+# Diffusion Functions
 
-generateScoreVector(Net, gene_list): Takes a gene list and generates an automatic score vector used in diffusion. All gene are assigned the arbitrary value of 100 if they are on the gene list. All other genes are assigned 0.
+**generateScoreVector(Net, gene_list)**: Takes a gene list and generates an automatic score vector used in diffusion. All gene are assigned the arbitrary value of 100 if they are on the gene list. All other genes are assigned 0.
 
-loadScoreVector(Net, score_data): Similar in usage to the generateScoreVector, loadScoreVector allows users to submit some scores of interested included q-value or abs(log(fold_change)). Returns a vector with the scores given by the input file, otherwise assigns 0. 
+**loadScoreVector(Net, score_data)**: Similar in usage to the generateScoreVector, loadScoreVector allows users to submit some scores of interested included q-value or abs(log(fold_change)). Returns a vector with the scores given by the input file, otherwise assigns 0. 
 
-computeDiffusionScore(Net, score_data, kernel): The diffusion scores are added to the Net structure after node diffusion using the given input kernel.]
+**computeDiffusionScore(Net, score_data, kernel)**: The diffusion scores are added to the Net structure after node diffusion using the given input kernel.]
 
-Wrappers for subgraph generation using search for methods. Each of these produces a tidygraph subgraph that is generated using the corresponding search for function:
+# Wrappers for subgraph generation using search for methods.
 
-moduleSubgraph(Net, Module, module_id):  Makes a subgraph of the specific module given by module id. 
+Each of these produces a tidygraph subgraph that is generated using the corresponding search for function:
 
-geneSubgraph(net, Module, gene_list): Makes a subgraph using the search for genes function.
+**moduleSubgraph(Net, Module, module_id)**:  Makes a subgraph of the specific module given by module id. 
 
-geneListSubgraph(net, Module, gene_list): Makes a subgraph using the search for genes_list function.
+**geneSubgraph(net, Module, gene_list)**: Makes a subgraph using the search for genes function.
 
-goSubgraph(Net, Module, enrich_2_module, go_term): Makes a subgraph using the the given go terms. 
+**geneListSubgraph(net, Module, gene_list)**: Makes a subgraph using the search for genes_list function.
 
-diffScoreSubgraph(Net, Percentile): Uses diffusion scores with cutoff percentile to generate a subgraph. 
+**goSubgraph(Net, Module, enrich_2_module, go_term)**: Makes a subgraph using the the given go terms. 
 
-induceSubgraph(Net, list): A helper function that induces a subgraph given a list of genes. 
+**diffScoreSubgraph(Net, Percentile)**: Uses diffusion scores with cutoff percentile to generate a subgraph. 
 
-graph2NodeEdgeTable(Net): Takes in a tidygraph network and produces tibbles (tidyverse table structure) containing node and edge lists. Used to generate required format for graphing. Note that the edge indexing is change for 1 to 0 indexing for usage with NetworkD3 display module. 
+**induceSubgraph(Net, list)**: A helper function that induces a subgraph given a list of genes. 
 
-Steiner Tree functions
+**graph2NodeEdgeTable(Net)**: Takes in a tidygraph network and produces tibbles (tidyverse table structure) containing node and edge lists. Used to generate required format for graphing. Note that the edge indexing is change for 1 to 0 indexing for usage with NetworkD3 display module. 
 
-getDistMatrix(Net, gene_list): given a gene list, gives the distance form each node in the list to every other node in the network. Uses a breadth first search method. This is used to generate psuedo_stiener trees. 
+# Steiner Tree functions
 
-buildStienerTrees(Net, gene_list): A wrapper function for generation of the Steiner tree. The dist matrix is generated, then the closest 2 nodes are connected. If more than 1 pair has the smallest distance the first in numerical order by index is selected. Nodes are then successively added to the tree by connected the next closest node. This continues until all nodes are as connected as possible. Note this function no longer requires only the largest connected component. Instead, a forest is generated if there are two unconnected components of interest. Assumes undirected graph structure. 
+**getDistMatrix(Net, gene_list)**: given a gene list, gives the distance form each node in the list to every other node in the network. Uses a breadth first search method. This is used to generate psuedo_stiener trees. 
 
-PrinterFunctions
+**buildStienerTrees(Net, gene_list)**: A wrapper function for generation of the Steiner tree. The dist matrix is generated, then the closest 2 nodes are connected. If more than 1 pair has the smallest distance the first in numerical order by index is selected. Nodes are then successively added to the tree by connected the next closest node. This continues until all nodes are as connected as possible. Note this function no longer requires only the largest connected component. Instead, a forest is generated if there are two unconnected components of interest. Assumes undirected graph structure. 
 
-printNodeInfo(Net, node_name): Prints information of Node in HTML format. Information includes name, module, associated GO term, and neighbors. 
+# PrinterFunctions
 
-printModuleInfo(Module, module_id, gene_list, genes): Prints information about module in HTML format. Information includes module id, module enrichment if computed, module genes, enriched regulators, and module enriched go term. 
+**printNodeInfo(Net, node_name)**: Prints information of Node in HTML format. Information includes name, module, associated GO term, and neighbors. 
 
-PrintAllModuleInfo(Subnet, Module, gene_list, genes): Prints a list of all modules in HTML format. This is used when a subgraph contains more than one module and makes successive callse to printModuleInfo. 
+**printModuleInfo(Module, module_id, gene_list, genes)**: Prints information about module in HTML format. Information includes module id, module enrichment if computed, module genes, enriched regulators, and module enriched go term. 
 
-GetModuleID(Net, node_name): returns the module id of the gene given by node name. 
+**PrintAllModuleInfo(Subnet, Module, gene_list, genes)**: Prints a list of all modules in HTML format. This is used when a subgraph contains more than one module and makes successive callse to printModuleInfo. 
+
+**GetModuleID(Net, node_name)**: returns the module id of the gene given by node name. 
