@@ -1,14 +1,20 @@
-# MelinGeneSubsetViz
+## MelinGeneSubsetViz
 
-Here is a note on features and usage: 
+# GUI interface
 
 Users can search the MERLIN network using various features, depending on the selected feature, a meaningful sub network is generated. Feature search include: 
 
-By Module: A representation of the module is generated with the additional regulated genes. 
+By Module: A representation of the module is generated with the additional regulated genes.
+
 By Gene: All neighbors of a gene are shown in addition to any module related to the gene.  (May need to allow searching for regulators of module as often these are not in the module themselves). 
+
 By GeneList: An extention of the by gene method. A list of genes is uploaded to the server. A subgraph is generated containing all related modules, and neighbors.  (see note above). 
+
 By GO Term: All modules enriched for a particular GO term are shown. 
+
 Node Diffusion: A list of genes is uploaded to the server (optionally the file can contain node values such as log expression or q-value). Node diffusion is applied. In the case where no information is provided an arbitrary value of 100 is assigned to each node. The kernel diffusion is applied with selected lambda and and a subgraph with nodes greater than the x% is displayed. x can be set by user. 
+
+
 In addition to search and node diffusion, the GUI can produce module files similar to the searchForModule function that I have written previously. Specifically when a GeneList is searched, module enrichement is computed for the gene list is computed. 
 
 Finally, an approximate Steiner tree search function has been provided to try and connect unconnect subgraph components when searching for multiple genes. If GO Term or Gene List is used to search network then the user can select to turn on a stiener tree visualization. The Steiner tree is computed and displayed over the subgraph and is displayed with red edges. 
