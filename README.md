@@ -1,4 +1,5 @@
-## MelinGeneSubsetViz
+## MerlinViz
+
 
 # GUI interface
 
