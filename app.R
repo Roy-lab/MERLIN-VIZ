@@ -9,7 +9,7 @@ library(webshot)
 library(htmlwidgets)
 
 ## Load in aux functions and data
-source('asp_aux_functions.R')
+source('aux_functions.R')
 #MyClickScript <- 'Shiny.setInputValue("save_module", module_name)'
 
 all_gene_names <- unique(c(genes, genename_map$common_name))
