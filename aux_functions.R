@@ -696,9 +696,9 @@ prepModuleTable <- function(Module_Table, method){
   return(Module_Table)
 }
 
-
 if(file.exists('net_data.Rdata')){
-	load('net_data.Rdata')
+  load('net_data.Rdata')
 }
+
 
 
