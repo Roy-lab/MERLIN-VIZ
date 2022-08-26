@@ -1,5 +1,16 @@
 ## MerlinViz
 
+# Dependencies 
+Install these into an R enviroment first!
+	-shiny
+	-tools
+	-tidyverse
+	-networkD3
+	-Matrix
+	-scales
+	-DT
+	-webshot
+	-htmlwidgets
 
 # GUI interface
 
@@ -22,10 +33,14 @@ Finally, an approximate Steiner tree search function has been provided to try an
 
 During any visualization, the user can gain additional information about the module and the node by clicking on the a node of interest. This will automatically print the Node Info and Module info to screen. The user can then download this information to file. When more than 1 module is displayed, all module information can be downloaded at once. This would be equivelent to the the searchForModule function that I have been using in the past. 
 
+
+
+
 # Notes on implementation and in lab usage: 
 Steps to create a GUI:
+	- Install library dependencies. 
 	- Source aux_functions.R file in R. 
-	- run makePostProcessDataStruct (see description below). This function will create a net_data.Rdata file that will contain the structures required to run the GUI. 
+	- run makePostProcessDataStruct (see description below). A list of example files is commented out of the beginning of aux_files. These were used to generate the aspergillus network visualization. This function will create a net_data.Rdata file that will contain the structures required to run the GUI. 
 	- run the shiny app with app.R 
 
 The GUI was intended for use by biologist who don't want to interact with a command line interface. However, since all functions used in the GUI are implemented in an independent R file, this file can be sourced into an R command line interface and used to perform all tasks indepedently of the GUI. A list of functions is below:
