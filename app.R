@@ -9,7 +9,7 @@ library(webshot)
 library(htmlwidgets)
 
 ## Load in aux functions and data
-source('aux_functions.R')
+source('asp_aux_functions.R')
 #MyClickScript <- 'Shiny.setInputValue("save_module", module_name)'
 
 all_gene_names <- unique(c(genes, genename_map$common_name))
@@ -70,6 +70,7 @@ ui <- fluidPage(
              checkboxGroupInput(inputId = "show_gene_names", label = h4("Show Gene Names"), 
                                 c("Show Names" = "sh")),
              actionButton("steiner", "Generate Steiner Tree"),
+             textInput("file_name", h4("Save File"), value = "file_name"),
              downloadButton("save_net_image", "Save Network")
              
       ),
@@ -249,7 +250,7 @@ server <- function(input, output, session) {
   })
   
   output$save_net_image <- downloadHandler(
-         filename = "MerlinViz.html",
+         filename = function(){ifelse(str_length(input$file_name) > 0, paste(input$file_name, '.html', sep = ''), 'file.html')},
          content = function(file) {
          S<-sub_net()
          if(isempty(S %N>% as_tibble())){
@@ -302,6 +303,7 @@ server <- function(input, output, session) {
   })
   
   output$nodes_table <- DT::renderDataTable({
+    file_name <- paste('node_table', ifelse(str_length(input$file_name) > 0, input$file_name, 'file') , sep ="_")
     S <-sub_net()
     if(isempty(S %N>% as_tibble())){
     }else{
@@ -309,17 +311,23 @@ server <- function(input, output, session) {
     S_nodes <- prepNodeTable(S_tables[[1]])
     DT::datatable(S_nodes, escape = FALSE, 
                   extensions = 'Buttons', options = list(
-                    dom = 'Bfrtip',
+                    dom = 'Blfrtip',
+                    title = paste('node_table', input$file_name, sep ="_"),
                     buttons = 
                       list('copy', 'print', list(
                         extend = 'collection',
-                        buttons = c('csv', 'excel', 'pdf'),
-                        text = 'Download'
-                      ))))
+                        buttons = list(list(extend = 'csv', filename = file_name),
+                                       list(extend = 'excel', filename = file_name),
+                                       list(extend = 'pdf', filename = file_name)),
+                        text = 'Download')),
+                    lengthMenu = list(c(10,50, 100, -1), 
+                                      c('10', '30', '50', 'All')),
+                    paging = T))
     }
   })
   
   output$module_table <- DT::renderDataTable({
+    file_name <- paste('module_table', ifelse(str_length(input$file_name) > 0, input$file_name, 'file') , sep ="_")
     S <-sub_net()
     if(isempty(S %N>% as_tibble())){
     }else{
@@ -330,13 +338,18 @@ server <- function(input, output, session) {
     ModT <- prepModuleTable(Module %>% filter(module %in% curr_modules), input$method)
     DT::datatable(ModT, escape = FALSE,
                   extensions = 'Buttons', options = list(
-                    dom = 'Bfrtip',
+                    dom = 'Blfrtip',
+                    title = paste('module_table', input$file_name, sep ="_"),
                     buttons = 
                       list('copy', 'print', list(
                         extend = 'collection',
-                        buttons = c('csv', 'excel', 'pdf'),
-                        text = 'Download'
-                  ))))
+                        buttons = list(list(extend = 'csv', filename = file_name),
+                                       list(extend = 'excel', filename = file_name),
+                                       list(extend = 'pdf', filename = file_name)),
+                        text = 'Download')),
+                    lengthMenu = list(c(10,50, 100, -1), 
+                                    c('10', '30', '50', 'All')),
+                    paging = T))
     }
   })
   
