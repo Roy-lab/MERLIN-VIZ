@@ -2,15 +2,15 @@
 
 # Dependencies 
 Install these into an R enviroment first!
-	-shiny
-	-tools
-	-tidyverse
-	-networkD3
-	-Matrix
-	-scales
-	-DT
-	-webshot
-	-htmlwidgets
+*shiny
+*tools
+*tidyverse
+*networkD3
+*Matrix
+*scales
+*DT
+*webshot
+*htmlwidgets
 
 # GUI interface
 
@@ -38,10 +38,10 @@ During any visualization, the user can gain additional information about the mod
 
 # Notes on implementation and in lab usage: 
 Steps to create a GUI:
-	- Install library dependencies. 
-	- Source aux_functions.R file in R. 
-	- run makePostProcessDataStruct (see description below). A list of example files is commented out of the beginning of aux_files. These were used to generate the aspergillus network visualization. This function will create a net_data.Rdata file that will contain the structures required to run the GUI. 
-	- run the shiny app with app.R 
+1. Install library dependencies. 
+2. Source aux_functions.R file in R. 
+3. run makePostProcessDataStruct (see description below). A list of example files is commented out of the beginning of aux_files. These were used to generate the aspergillus network visualization. This function will create a net_data.Rdata file that will contain the structures required to run the GUI. 
+4. run the shiny app with app.R 
 
 The GUI was intended for use by biologist who don't want to interact with a command line interface. However, since all functions used in the GUI are implemented in an independent R file, this file can be sourced into an R command line interface and used to perform all tasks indepedently of the GUI. A list of functions is below:
 
