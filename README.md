@@ -23,22 +23,35 @@ Finally, an approximate Steiner tree search function has been provided to try an
 During any visualization, the user can gain additional information about the module and the node by clicking on the a node of interest. This will automatically print the Node Info and Module info to screen. The user can then download this information to file. When more than 1 module is displayed, all module information can be downloaded at once. This would be equivelent to the the searchForModule function that I have been using in the past. 
 
 # Notes on implementation and in lab usage: 
+Steps to create a GUI:
+	- Source aux_functions.R file in R. 
+	- run makePostProcessDataStruct (see description below). This function will create a net_data.Rdata file that will contain the structures required to run the GUI. 
+	- run the shiny app with app.R 
 
 The GUI was intended for use by biologist who don't want to interact with a command line interface. However, since all functions used in the GUI are implemented in an independent R file, this file can be sourced into an R command line interface and used to perform all tasks indepedently of the GUI. A list of functions is below:
 
-**makePostProcessDataStruct(all_nodes_files, edge_list_files, module2gene_files, go_files, module_file, regulator_enrich_file, go_enrich_file)**: Used to generate two tidyverse data structures that contain all information about the network. The first is a tidygraph containing all merlin edges and nodes, the number of neighbors of each node, a list of neigbhors for each node, the module assignment of node, and the edge confidence. This allows for easy search and use fo the tidygraph algorithm sweet to manipulate data. The second is a Module structure that contains all module information. This is used for efficient lookup of module features.  The function automatically saves this into an Rdata file for later loading. 
+**makePostProcessDataStruct(all_nodes_files, edge_list_files, module2gene_files, go_files, module_file, regulator_enrich_file, go_enrich_file, gene2genename_file, gene_desc_file, regulator_list_file)**: Used to generate two tidyverse data structures that contain all information about the network. The first is a tidygraph containing all merlin edges and nodes, the number of neighbors of each node, a list of neigbhors for each node, the module assignment of node, and the edge confidence. This allows for easy search and use fo the tidygraph algorithm sweet to manipulate data. The second is a Module structure that contains all module information. This is used for efficient lookup of module features.  The function automatically saves this into an Rdata file for later loading. 
 
-all_node_files: A list of genes used in inference. I have included genes that do not have any edges as they may be in a module. 
+all_node_files: A list of genes used in inference. I have included genes that do not have any edges as they may be in a module. All genes in the orginal structure inference step. 
 
-edge_list_files: A list of merlin edges
+edge_list_files: A list of merlin edges. Format: <source gene from all_node_file> <target gene from all_node_file> <weight> using tab delimiters. 
 
-module2gene_file: a node by node assignment to modules
+module2gene_file: a node by node assignment to modules: Module assignment file from merlin. Format <all_node_file gene> <module assigment> using tab delimiter. 
 
-go_file: A list of all GO terms assocatiated with genes.
+go_file: A list of all GO terms assocatiated with genes. Format <Gene name matching all_nodes_file> <GOTerm> <TermLevel> using a tab delimiter. There is a header on this file. 
 
-regulator_enrich_file: The regulator enrichment of MERLIN modules
+module_file: A file containing a list of genes per module. Should have the module number followed by a list of genes. Format: Cluster<module id> <gene lists using # delimiter>. 
 
-go_enrich_file: The go enrichment of MERLIN modules. 
+regulator_enrich_file: The regulator enrichment of MERLIN modules. Format from enrich analyzer using the module_file.
+
+go_enrich_file: The go enrichment of MERLIN modules. Format from enrich anaylzer using the module_file. 
+
+gene2genename_file: This file contains two columns. The first column is contains a formal gene name. The second file contains a common gene name. This has use in some plant and fungal species. In Aspergillus, all names have a formal id AFUA_#G#####, which is useful for search but less recognizable then a common name. If you would like to ignore this feature just include a file with the same names in two columns (human etc). 
+
+gene_desc_file: This file contains a one-line discription of each gene. e.g. RING finger protein. Format should be <formal gene name from all nodes file> \tab Description (Cannnot include tabs)
+
+regulator_list_file: A file containing a list of genes from all_node_file that are designated as regulators in the model specification. Format is a single column of genes.  
+
 
 **makeLaplacian(Net)**: Generates the laplacian of the graph. Requires the Net object from makePostProcessDataStruct.
 
@@ -95,3 +108,6 @@ Each of these produces a tidygraph subgraph that is generated using the correspo
 **PrintAllModuleInfo(Subnet, Module, gene_list, genes)**: Prints a list of all modules in HTML format. This is used when a subgraph contains more than one module and makes successive callse to printModuleInfo. 
 
 **GetModuleID(Net, node_name)**: returns the module id of the gene given by node name. 
+
+
+
