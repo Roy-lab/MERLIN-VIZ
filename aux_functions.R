@@ -51,7 +51,7 @@ rna_seq <- read_tsv(rna_seq_file, col_names = TRUE) %>%
 atac_seq <- read_tsv(atac_seq_file, col_names = TRUE) %>%
   group_by(Names) %>%
   nest() %>%
-  rename('atac_seq_'='data') %>% 
+  rename('atac_seq'='data') %>% 
   rename('feature'='Names')
 
 regulators <- read_tsv(regulator_list_file, col_names = FALSE) %>%
