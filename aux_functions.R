@@ -22,7 +22,7 @@ library(DT)
 makePostProcessDataStruct <- function (all_nodes_file, edge_list_file,
                           module2gene_file, go_file, module_file, 
                           regulator_enrich_file, go_enrich_file, 
-                          gene2genename_file, gene_desc_file, regulator_list_file)
+                          gene2genename_file, gene_desc_file, regulator_list_file, rna_seq_file, atac_seq_file)
 {
 ###### Generate labeled Node Set
 genes2modules <- read_tsv(module2gene_file, c("feature", "module"))
@@ -42,6 +42,18 @@ go <- read_tsv(go_file, col_names = TRUE) %>%
   chop(go) %>%
   ungroup()
 
+rna_seq <- read_tsv(rna_seq_file, col_names = TRUE) %>% 
+  group_by(Names) %>%
+  nest() %>%
+  rename('rna_seq'='data') %>%
+  rename('feature'='Names')
+
+atac_seq <- read_tsv(atac_seq_file, col_names = TRUE) %>%
+  group_by(Names) %>%
+  nest() %>%
+  rename('atac_seq_'='data') %>% 
+  rename('feature'='Names')
+
 regulators <- read_tsv(regulator_list_file, col_names = FALSE) %>%
   rename("feature" = "X1") %>%
   mutate(regulator = TRUE)
@@ -60,7 +72,9 @@ nodes <- read_tsv(file = all_nodes_file, col_names = "feature") %>%
           left_join(go) %>%
           left_join(gene_map) %>%
           left_join(gene_desc) %>%
-          left_join(regulators) 
+          left_join(regulators) %>% 
+          left_join(rna_seq) %>%
+          left_join(atac_seq)
 
 nodes$`Common Name`[which(is.na(nodes$`Common Name`))] = nodes$feature[which(is.na(nodes$`Common Name`))]
 

@@ -9,8 +9,9 @@ library(webshot)
 library(htmlwidgets)
 
 ## Load in aux functions and data
-source('asp_aux_functions.R')
-#MyClickScript <- 'Shiny.setInputValue("save_module", module_name)'
+source('aux_functions.R')
+
+MyClickScript <- 'Shiny.setInputValue("exp_gene", d.name)'
 
 all_gene_names <- unique(c(genes, genename_map$common_name))
 
@@ -69,12 +70,22 @@ ui <- fluidPage(
              ),
              checkboxGroupInput(inputId = "show_gene_names", label = h4("Show Gene Names"), 
                                 c("Show Names" = "sh")),
+             
+             #selectInput(inputId = "exp_gene", label = "RNA-seq Plots", choices = NULL, multiple = FALSE, selectize = TRUE),
              actionButton("steiner", "Generate Steiner Tree"),
              textInput("file_name", h4("Save File"), value = "file_name"),
              downloadButton("save_net_image", "Save Network")
              
       ),
-      column(10,forceNetworkOutput("network",height = "750px"))
+      column(6,forceNetworkOutput("network",height = "750px")),
+      column(4,
+        fluidRow(
+          column(12, plotOutput("rna_seq", height = '350px')),
+        ),
+        fluidRow(
+          column(12, plotOutput("atac_seq", height = '350px'))
+        ),
+      ),
     ),
     fluidRow(
       column(12,
@@ -108,12 +119,14 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   updateSelectizeInput(session, 'gene', choices = all_gene_names, server = TRUE)
   updateSelectizeInput(session, 'gl', choices = all_gene_names, server = TRUE)
+  updateSelectizeInput(session, 'exp_gene', choices = all_gene_names, server=TRUE)
   #### Variables ################
   node_name_info <- reactiveVal(value = NA)  
   module_id_info <- reactiveVal(value = NA)
   steiner_net <- reactiveVal()
   sub_net <- reactiveVal()
-  gene_name <-reactiveVal()
+  exp_gene <- reactiveVal()
+  gene_name <-reactiveVal(NA)
   percentile <- reactiveVal(95)
   lambda <- reactiveVal(1)
   gene_list <- reactiveVal(NULL)
@@ -298,6 +311,38 @@ server <- function(input, output, session) {
 
   
   ############## Main Render ######################
+  output$rna_seq = renderPlot({
+    if(!is.null(input$exp_gene)){  
+      curr_rna_seq <- Net %N>% filter(feature == input$exp_gene) %>% pull(rna_seq)
+      if(!is.null(curr_rna_seq[[1]])){
+        curr_rna_seq <- curr_rna_seq[[1]] %>% gather() %>% rowid_to_column("id")
+        ggplot(data = curr_rna_seq) + 
+          aes(x =id, y =value) + 
+          geom_line(color = 'blue') +
+          theme_minimal() + 
+          labs(x = 'Time point', y='RNA-seq Normalized Expression', title=input$exp_gene) + 
+          scale_x_continuous(breaks = seq(1,max(curr_rna_seq$id)), labels = as.character(curr_rna_seq$key)) +
+          theme(plot.title = element_text(hjust = 0.5))
+      }
+    }
+  })
+  
+  output$atac_seq = renderPlot({
+    print(input$exp_gene)
+    if(!is.null(input$exp_gene)){
+      curr_atac_seq <- Net %N>% filter(feature == input$exp_gene) %>% pull(atac_seq)
+      if(!is.null(curr_atac_seq[[1]])){
+        curr_atac_seq <- curr_atac_seq[[1]] %>% gather() %>% rowid_to_column("id")
+        ggplot(data = curr_atac_seq) + 
+          aes(x =id, y =value) + 
+          geom_line(color = 'red') + 
+          theme_minimal() + 
+          labs(x = 'Time point', y='ATAC-seq Normalized Counts') + 
+          scale_x_continuous(breaks = seq(1,max(curr_atac_seq$id)), labels = as.character(curr_atac_seq$key))
+      }
+    }
+   })
+  
   output$table  = DT :: renderDataTable({
     tabPanel("nodes", )
   })
@@ -384,14 +429,14 @@ server <- function(input, output, session) {
                    Value = "weight", NodeID = names,
                    Group = input$group_by, Nodesize = "size", opacity = 1, opacityNoHover = op,
                    zoom = TRUE, fontSize=fs, radiusCalculation = JS("d.nodesize"),
-                   charge = -10) 
+                   charge = -10, clickAction = MyClickScript) 
     }
     else{forceNetwork(Links = S_edges, Nodes = S_nodes,
                  Source = "from", Target = "to",
                  Value = "weight", NodeID = names,
                  Group = input$group_by, linkColour=S_edges$color_code,
                  opacity = 1, opacityNoHover = op, zoom = TRUE, fontSize=fs,
-                 charge = -20)
+                 charge = -20, clickAction = MyClickScript)
     }
     }
   })
