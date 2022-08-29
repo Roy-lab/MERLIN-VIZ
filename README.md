@@ -45,7 +45,7 @@ Steps to create a GUI:
 The GUI was intended for use by biologist who don't want to interact with a command line interface. However, since all functions used in the GUI are implemented in an independent R file, this file can be sourced into an R command line interface and used to perform all tasks indepedently of the GUI. A list of functions is below:
 
 ## Initialization Functions
-* **makePostProcessDataStruct(all_nodes_files, edge_list_files, module2gene_files, go_files, module_file, regulator_enrich_file, go_enrich_file, gene2genename_file, gene_desc_file, regulator_list_file)**: Used to generate two tidyverse data structures that contain all information about the network. The first is a tidygraph containing all merlin edges and nodes, the number of neighbors of each node, a list of neigbhors for each node, the module assignment of node, and the edge confidence. This allows for easy search and use fo the tidygraph algorithm sweet to manipulate data. The second is a Module structure that contains all module information. This is used for efficient lookup of module features.  The function automatically saves this into an Rdata file for later loading. 
+* **makePostProcessDataStruct(all_nodes_files, edge_list_files, module2gene_files, go_files, module_file, regulator_enrich_file, go_enrich_file, gene2genename_file, gene_desc_file, regulator_list_file, rna_seq_file, atac_seq_file)**: Used to generate two tidyverse data structures that contain all information about the network. The first is a tidygraph containing all merlin edges and nodes, the number of neighbors of each node, a list of neigbhors for each node, the module assignment of node, and the edge confidence. This allows for easy search and use fo the tidygraph algorithm sweet to manipulate data. The second is a Module structure that contains all module information. This is used for efficient lookup of module features.  The function automatically saves this into an Rdata file for later loading. 
 
   * all_node_files: A list of genes used in inference. I have included genes that do not have any edges as they may be in a module. All genes in the orginal structure inference step. 
 
@@ -66,8 +66,11 @@ The GUI was intended for use by biologist who don't want to interact with a comm
   * gene_desc_file: This file contains a one-line discription of each gene. e.g. RING finger protein. Format should be <formal gene name from all nodes file> \tab Description (Cannnot include tabs)
 
   * regulator_list_file: A file containing a list of genes from all_node_file that are designated as regulators in the model specification. Format is a single column of genes.  
-
-
+  
+  * rna_seq_file: A file containing a list of feature points and gene names. The first column should be labeled Names, and have features that match the genes in all_nodes file. The remaining columns must be labeled and presented in the order of the desired display.
+ 
+ * atac_seq_file: A file containing a list of features points and gene_names. The first column should be labeled Names, and have features that match teh genes in all_nodes. The remaining columns must be labeled and presented in the order of the desired display. 
+ 
 * **makeLaplacian(Net)**: Generates the laplacian of the graph. Requires the Net object from makePostProcessDataStruct.
 
 * **MakeKernel(L, lambda)**: Generates a diffusion kernel from laplacian with hyperparameter lambda. These can be saved and loaded for later use.
