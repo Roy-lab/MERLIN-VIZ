@@ -16,7 +16,18 @@ library(DT)
 #gene_desc_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_description_file.txt"
 #SHinregulator_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_transcription_factors.tsv"
 
-
+all_nodes_file <- "inputs/GeneList_v1.txt"
+edge_list_file <- "inputs/Network_v1.txt"
+module2gene_file <- "inputs/TransitioningGeneSetClusterAssignments.txt"
+module_file <- "inputs/module_genesets.txt"
+go_file = "inputs/go_regnet.txt"
+regulator_enrich_file <- "inputs/all_NET_details.txt"
+go_enrich_file <- "inputs/all_GO_reformatt_details.txt"
+gene2genename_file <- "inputs/GeneNameMapping.txt"
+gene_desc_file <- "inputs/Description_v1.txt"
+regulator_list_file <- "inputs/Regulators_v1.txt"
+rna_seq_file <- "inputs/normalizedExp.txt"
+atac_seq_file <- "inputs/merged_promoters_uniform_globalMeanLogQNorm.txt"
 
 ################### Make R Data Files *Only need to run once###################
 makePostProcessDataStruct <- function (all_nodes_file, edge_list_file,
@@ -75,6 +86,9 @@ nodes <- read_tsv(file = all_nodes_file, col_names = "feature") %>%
           left_join(regulators) %>% 
           left_join(rna_seq) %>%
           left_join(atac_seq)
+
+nodes$regulator <- sapply(nodes$regulator, function(x){ifelse(is.na(x), 'tar', 'scr')})
+nodes$module <- sapply(nodes$module, function(x){ifelse(is.na(x), -9999, x)})
 
 nodes$`Common Name`[which(is.na(nodes$`Common Name`))] = nodes$feature[which(is.na(nodes$`Common Name`))]
 
@@ -638,13 +652,15 @@ prepNodeTable <- function(Nodes_Table){
   Nodes_Table <- Nodes_Table %>% mutate(.tidygraph_node_index = NULL, enriched_modules = NULL) %>%
     rowwise() %>% 
     mutate(go = paste(unlist(go), collapse = ' <br/>')) %>% 
-    mutate(neighbors = paste(unlist(sapply(neighbors, function(x) 
-    if(x %in% genename_map$feature_name){
-      x <- str_pad(genename_map$common_name[which(x == genename_map$feature_name)], 12, side = "both")
-    }else{
-      x <- x
-    })), collapse = ' | ')) %>%
+    mutate(neighbors = NULL) %>%  #paste(unlist(sapply(neighbors, function(x) 
+    #if(x %in% genename_map$feature_name){
+    #  x <- str_pad(genename_map$common_name[which(x == genename_map$feature_name)], 12, side = "both")
+    #}else{
+    #  x <- x
+    #})), collapse = ' | ')) %>%
     rename("Gene Name" = "feature") %>%
+    mutate(rna_seq=NULL) %>%
+    mutate(atac_seq=NULL) %>%	
     mutate("Gene Name" = sprintf('<a href="https://fungidb.org/fungidb/app/record/gene/%s" target="_blank" rel="noopener noreferrer"> %s</a>', str_replace(`Gene Name`, '_nca', ''), `Gene Name`)) %>%
     mutate("id" = NULL) %>%
     mutate("regulator" = NULL)

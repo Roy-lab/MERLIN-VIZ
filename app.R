@@ -16,21 +16,24 @@ MyClickScript <- 'Shiny.setInputValue("exp_gene", d.name)'
 all_gene_names <- unique(c(genes, genename_map$common_name))
 
 ################################# ui ###########################################
-ui <- fluidPage(
+ui <- navbarPage("Medicago_DRMNViz",
+    tabPanel("Vizualize",             
     fluidRow(
       column(2, 
              radioButtons("common_name", h4("Gene Name Format"),
                           choices = list("Common" = 1, "Standard" = 2)),
              radioButtons("group_by", h4("Node Color By"), 
-                          choices = list ("Module" = 'module', "Regulator" = "regulator")),
+                          choices = list ("Regulator/target" = "regulator", "Cluster" = 'module')),
              selectInput(inputId = "method", h4("Search Method"),
-                         c("", Modules = "module", 'GO Term' = "go_term", 
-                           'Gene List' = 'list', "Node Diffusion" = "diff")
+                         c( "Transitioning gene set" = "module", 'GO Term' = "go_term", 
+                           'Gene List' = 'list', "Node Diffusion" = "diff"),
+			selected="module"	
              ),
              conditionalPanel(
                condition = "input.method == 'module'",
                selectInput(
-                 inputId = "module_id", "Module ID",
+                 inputId = "module_id", "Cluster ID",
+		            selected="112",	
                  sort(module_ids)
                )
              ),
@@ -53,7 +56,7 @@ ui <- fluidPage(
                  fileInput(inputId = "cell_list_file", "Cell List File")
                ),
                checkboxGroupInput(inputId = "search_additional", 
-                                  label = h4("Inlude additional Genes"),
+                                  label = h4("Include additional Genes"),
                                   c("Modules" = "mod", "Neighbors" = "neigh")
                )
              ),
@@ -72,7 +75,7 @@ ui <- fluidPage(
                                 c("Show Names" = "sh")),
              
              #selectInput(inputId = "exp_gene", label = "RNA-seq Plots", choices = NULL, multiple = FALSE, selectize = TRUE),
-             actionButton("steiner", "Generate Steiner Tree"),
+             #actionButton("steiner", "Generate Steiner Tree"),
              textInput("file_name", h4("Save File"), value = "file_name"),
              downloadButton("save_net_image", "Save Network")
              
@@ -83,7 +86,7 @@ ui <- fluidPage(
           column(12, plotOutput("rna_seq", height = '350px')),
         ),
         fluidRow(
-          column(12, plotOutput("atac_seq", height = '350px'))
+          column(12, plotOutput("atac_seq", height = '350px')) 
         ),
       ),
     ),
@@ -114,18 +117,23 @@ ui <- fluidPage(
       #       htmlOutput(outputId = "module_info")
       #       )
   )
+    ),
+  tabPanel("Help",
+      fluidPage(htmltools::tags$iframe(src = "user_read_me.html", width = '100%',  height = 1000,  style = "border:none;"))     
+  )
 )
 ##################### Server Functions ########################################
 server <- function(input, output, session) {
   updateSelectizeInput(session, 'gene', choices = all_gene_names, server = TRUE)
   updateSelectizeInput(session, 'gl', choices = all_gene_names, server = TRUE)
   updateSelectizeInput(session, 'exp_gene', choices = all_gene_names, server=TRUE)
+  
   #### Variables ################
   node_name_info <- reactiveVal(value = NA)  
   module_id_info <- reactiveVal(value = NA)
   steiner_net <- reactiveVal()
   sub_net <- reactiveVal()
-  exp_gene <- reactiveVal()
+  exp_gene <- reactiveVal('MtrunA17Chr1g0156711')
   gene_name <-reactiveVal(NA)
   percentile <- reactiveVal(95)
   lambda <- reactiveVal(1)
@@ -234,6 +242,10 @@ server <- function(input, output, session) {
     sub_net(gene_list(read_csv(file = fp, col_names=FALSE) %>% pull(X1)))
   })
   
+  observeEvent(input$exp_gene, {
+    exp_gene(input$exp_gene)
+  })
+
   observeEvent(gene_list(), {
     if(length(gene_list()> 0 )){
       sub_net(geneListSubgraph(Net, Module, gene_list(), input$search_additional))
@@ -258,9 +270,9 @@ server <- function(input, output, session) {
     gene_list(sub_net() %N>% pull(feature))
   })
   
-  observeEvent(input$method, {
-  sub_net(tbl_graph())
-  })
+  #observeEvent(input$method, {
+  #sub_net(tbl_graph())
+  #})
   
   output$save_net_image <- downloadHandler(
          filename = function(){ifelse(str_length(input$file_name) > 0, paste(input$file_name, '.html', sep = ''), 'file.html')},
@@ -312,15 +324,15 @@ server <- function(input, output, session) {
   
   ############## Main Render ######################
   output$rna_seq = renderPlot({
-    if(!is.null(input$exp_gene)){  
-      curr_rna_seq <- Net %N>% filter(feature == input$exp_gene) %>% pull(rna_seq)
+    if(!is.null(exp_gene())){  
+      curr_rna_seq <- Net %N>% filter(feature == exp_gene()) %>% pull(rna_seq)
       if(!is.null(curr_rna_seq[[1]])){
         curr_rna_seq <- curr_rna_seq[[1]] %>% gather() %>% rowid_to_column("id")
         ggplot(data = curr_rna_seq) + 
           aes(x =id, y =value) + 
           geom_line(color = 'blue') +
           theme_minimal() + 
-          labs(x = 'Time point', y='RNA-seq Normalized Expression', title=input$exp_gene) + 
+          labs(x = 'Time point', y='RNA-seq Normalized Expression', title=exp_gene()) + 
           scale_x_continuous(breaks = seq(1,max(curr_rna_seq$id)), labels = as.character(curr_rna_seq$key)) +
           theme(plot.title = element_text(hjust = 0.5))
       }
@@ -328,9 +340,9 @@ server <- function(input, output, session) {
   })
   
   output$atac_seq = renderPlot({
-    print(input$exp_gene)
-    if(!is.null(input$exp_gene)){
-      curr_atac_seq <- Net %N>% filter(feature == input$exp_gene) %>% pull(atac_seq)
+    print(exp_gene())
+    if(!is.null(exp_gene())){
+      curr_atac_seq <- Net %N>% filter(feature == exp_gene()) %>% pull(atac_seq)
       if(!is.null(curr_atac_seq[[1]])){
         curr_atac_seq <- curr_atac_seq[[1]] %>% gather() %>% rowid_to_column("id")
         ggplot(data = curr_atac_seq) + 
@@ -422,20 +434,30 @@ server <- function(input, output, session) {
       fs <- 12
     }
     
+    if(input$group_by == "regulator"){
+	    colorScale = JS('color=d3.scaleOrdinal([`#d62728`, `#87C1FF`]), color.domain(["src","tar"])');
+    }
+    else{
+	    colorScale = JS('color=d3.scaleOrdinal([`#d62728`,`#1f77b4`,`#aec7e8`,`#ff7f0e`,`#ffbb78`,`#2ca02c`,`#98df8a`,`#ff9896`,`#9467bd`,`#c5b0d5`,`#8c564b`,`#c49c94`,`#e377c2`,`#f7b6d2`,`#7f7f7f`,`#c7c7c7`,`#bcbd22`,`#dbdb8d`,`#17becf`,`#9edae5`]), color.domain([-9999])');
+	 }
+    #print(input$group_by)
+    #print(colorScale)
     if(input$method == "diff"){
-      S_nodes <- S_nodes %>% mutate(size = rescale(score, to = c(4, 16)))
+      S_nodes <- S_nodes %>% mutate(size = rescale(score, to = c(4, 16)))	
       forceNetwork(Links = S_edges, Nodes = S_nodes,
                    Source = "from", Target = "to",
                    Value = "weight", NodeID = names,
                    Group = input$group_by, Nodesize = "size", opacity = 1, opacityNoHover = op,
-                   zoom = TRUE, fontSize=fs, radiusCalculation = JS("d.nodesize"),
+                  zoom = TRUE, fontSize=fs, radiusCalculation = JS("d.nodesize"), colourScale = colorScale,
                    charge = -10, clickAction = MyClickScript) 
     }
-    else{forceNetwork(Links = S_edges, Nodes = S_nodes,
+    else{
+      print(colorScale)
+      forceNetwork(Links = S_edges, Nodes = S_nodes,
                  Source = "from", Target = "to",
                  Value = "weight", NodeID = names,
-                 Group = input$group_by, linkColour=S_edges$color_code,
-                 opacity = 1, opacityNoHover = op, zoom = TRUE, fontSize=fs,
+                 Group = input$group_by, linkColour = S_edges$color_code,
+                 opacity = 1, opacityNoHover = op, zoom = TRUE, fontSize = fs, colourScale = colorScale,
                  charge = -20, clickAction = MyClickScript)
     }
     }
