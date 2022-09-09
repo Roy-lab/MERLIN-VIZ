@@ -9,7 +9,7 @@ library(webshot)
 library(htmlwidgets)
 
 ## Load in aux functions and data
-source('asp_aux_functions.R')
+source('aux_functions.R')
 #MyClickScript <- 'Shiny.setInputValue("save_module", module_name)'
 
 all_gene_names <- unique(c(genes, genename_map$common_name))
@@ -42,7 +42,7 @@ ui <- fluidPage(
              ),
              conditionalPanel(
                condition = "input.method == 'list'",
-               radioButtons("list_type", h2("Select List Type"), choices = list("Select" = 1, "File" = 2)),
+               radioButtons("list_type", h4("Select List Type"), choices = list("Select" = 1, "File" = 2)),
                conditionalPanel(
                  condition = "input.list_type == 1", 
                  selectInput(inputId = "gl", label = "Genes", choices = NULL, multiple = TRUE, selectize = TRUE)
@@ -52,8 +52,8 @@ ui <- fluidPage(
                  fileInput(inputId = "cell_list_file", "Cell List File")
                ),
                checkboxGroupInput(inputId = "search_additional", 
-                                  label = h4("Inlude additional Genes"),
-                                  c("Modules" = "mod", "Neighbors" = "neigh")
+                                  label = h4("Include Additional Genes"),
+                                  c("Steiner Tree" = "stein", "Modules" = "mod", "Neighbors" = "neigh")
                )
              ),
              conditionalPanel(
@@ -69,7 +69,6 @@ ui <- fluidPage(
              ),
              checkboxGroupInput(inputId = "show_gene_names", label = h4("Show Gene Names"), 
                                 c("Show Names" = "sh")),
-             actionButton("steiner", "Generate Steiner Tree"),
              textInput("file_name", h4("Save File"), value = "file_name"),
              downloadButton("save_net_image", "Save Network")
              
@@ -235,12 +234,11 @@ server <- function(input, output, session) {
   
   
   observeEvent(input$steiner, {
-    st <- buildSteinerTrees(Net, sub_net() %N>%  pull(feature))
+    st <- buildSteinerTrees(Net, gene_list())
     st <- st %E>%
       mutate(is_steiner = TRUE) %N>%
       mutate(is_steiner = TRUE)
     sub_net(graph_join(sub_net(), st) %>%
-      mutate(is_steiner = replace_na(is_steiner, FALSE)) %>%
       mutate(color_code = if_else(is_steiner, "#FF0000", "#666")))
     gene_list(sub_net() %N>% pull(feature))
   })
@@ -362,7 +360,6 @@ server <- function(input, output, session) {
     S_edges <- S_tables[[2]]
     S_edges <- S_edges %>% add_row(from = 0, to = 0, weight = 0)
     
-    
     if(input$common_name == 1){
       names <- "Common Name"
     }else if(input$common_name == 2){
@@ -377,12 +374,19 @@ server <- function(input, output, session) {
       fs <- 12
     }
     
+    if(input$group_by == "regulator"){
+      colorScale = JS('color=d3.scaleOrdinal([`#fb8072`, `#80b1d3`]), color.domain(["src","tar"])');
+    }
+    else{
+      colorScale = JS('color=d3.scaleOrdinal([`#bebebe`, `#8dd3c7`,`#f4f452`,`#bebada`,`#fb8072`,`#80b1d3`,`#fdb462`,`#b3de69`,`#fccde5`,`#ccebc5`,`#bc80bd`]), color.domain([-9999])');
+    }
+    
     if(input$method == "diff"){
       S_nodes <- S_nodes %>% mutate(size = rescale(score, to = c(4, 16)))
       forceNetwork(Links = S_edges, Nodes = S_nodes,
                    Source = "from", Target = "to",
                    Value = "weight", NodeID = names,
-                   Group = input$group_by, Nodesize = "size", opacity = 1, opacityNoHover = op,
+                   Group = input$group_by, Nodesize = "size", opacity = 1, opacityNoHover = op, colourScale = colorScale, 
                    zoom = TRUE, fontSize=fs, radiusCalculation = JS("d.nodesize"),
                    charge = -10) 
     }
@@ -390,7 +394,7 @@ server <- function(input, output, session) {
                  Source = "from", Target = "to",
                  Value = "weight", NodeID = names,
                  Group = input$group_by, linkColour=S_edges$color_code,
-                 opacity = 1, opacityNoHover = op, zoom = TRUE, fontSize=fs,
+                 opacity = 1, opacityNoHover = op, zoom = TRUE, fontSize=fs, colourScale = colorScale, 
                  charge = -20)
     }
     }
