@@ -1,0 +1,147 @@
+---
+title: "GRAsp"
+subtitle: "Gene Regulation of *Aspergillus Fumigatus*"
+author: "Roy Lab"
+date: "Version 1.0"
+fontsize: 12pt
+output: 
+  html_document:
+    theme: null 
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, echo = FALSE, warning=FALSE, error=FALSE, include = FALSE}
+library(tidyverse)
+library(networkD3)
+library(DT)
+
+load('net_data.Rdata')
+source('aux_functions.R')
+```
+
+--- 
+
+# Overview
+GRAsp is a genome-wide gene-regulatory network that was inferred using the MERLIN-P-TFA package and visualized with the MERLIN-VIZ framework. Data was collected form publicly available RNA-seq data sets from multiple strains of *A. fumigatus* In each of these data sets a variety of different experimental conditions are observed e.g. exposure to drugs, signals, temperature change, pathogenesis etc. We normalized all data sets and then attempted to learn a regulatory network where we predict the expression of genes using the expression of transcription factors. For more information on the MERLIN inference algorithm see the section **What is MERLIN** below. We hope that this project provides new insight into the roles of transcription factors and improves general knowledge about *A. fumigatus*.    
+
+---
+
+# Network Vocabulary:
+Below is a list of vocabulary that will be useful when reading this document. For more information expand the more information tab below.
+
+* Graph - A mathematical model of a network. It consists of a list of nodes and edges. 
+* Nodes - A list of objects that we want to relate in the network. In the case of MERLIN, these are genes. MERLIN-P-TFA also includes additional nodes that have gene names followed by the suffix nca. NCA stands for network component analysis. These nodes indicate gene profiles that are estimates of the transcription factor activity rather than the gene expression itself. A description of network component analysis and why transcription factor activity may be uses is included in the **What is MERLIN** section below. Transcription factor activity profiles are more directly related to regulatory mechanism and thus are better predictors of regulatory relationships.  
+* Edges - Used to model a relationship between objects in a graph. In MERLIN if two genes are part of a regulator target pair they are connected by an edge. 
+* Neighbors - Two nodes are neighbors if they are connected by an edge. 
+* Neighborhood - A neighborhood of a node is all other nodes that are connected to it.
+* Degree - The number of connections a node has. 
+* Module - A group of nodes which are related in a particular context. In MERLIN a module consists of a list of nodes that are co-regulated and co-expressed. 
+* Enrichment - The proportion of genes that meet a criterion within a module vs the proportion of genes that meet the same criteria in the population. This value is hard to interpret by itself, thus we instead compute a p-value for how significant the enrichment is. The p-values are computed using a hypergeometric test fallowed by multiple test correction. GRAsp makes use enrichment p-values using three different criteria.
+  * Gene list enrichment - In this case, the criteria is if the gene is found on the gene list used to search the network. A module with more significant enrichment p-value is likely more related to the query of interest.
+  * GO enrichment - GO stands for gene ontology. These are sets of predefined terms that assign functional annotation for genes. In computational biology they are useful in assessing if groups of genes have a common purpose. We do this through GO term enrichment.  In this case, the enrichment criterion is satisfied if a gene matches a particular GO term. For each GO term we can test to see if the module is enriched with genes matching that term. The idea behind this test is to try and associate Merlin modules to a particular biological function. All GO terms come are sourced from fungiDB and are found at this [link](https://fungidb.org/fungidb/app/downloads/Current_Release/AfumigatusAf293/gaf/FungiDB-59_AfumigatusAf293_GO.gaf "Named link title").
+  * Regulator enrichment- In this case, the criteria is that the gene has targets within the module. This is used to determine if a module is a governing regulator of a particular module. This can be used to determine an important regulator. 
+
+
+<details> 
+  <summary> More information </summary>
+  <p> The goal of this work is to try and understand the regulatory mechanism as of *A. fumigatus*. To do this we use a mathematical object that is referred to as a graph or equivalently a network. As many of the users of this toolkit may be unfamiliar with the formalism of this branch of mathematics, we decided to include an aside discussing some common phraseology that will be included throughout the rest of the document. Note that the study of graphs, called graph theory, is a  developed branch of mathematics with many applications. As such, there is a set of language that is used when describing components of a graph that allow mathematicians to discuss common structures without needing to understand specific contexts such as cell biology. We often default to these terms out of convenience. </p>
+  
+  A graph is formally an object containing two sets. The first set is a collection of objects which are often referred to as nodes or vertices. The second set is a set of relations which are often called edges. To demonstrate these rather abstract objects, we will use an example. Imagine you are at a party and the mathematician friend is sitting in the corner. They have the question "how are all the people here related?". To store the information, the mathematician might decide to use a graph. In this case, its would make sense to consider all of the people as nodes. Then if two people knew each other before the party they might denote the relationship as an edge. The entire set of people and all of these relationships would compose the graph. In the context of MERLIN, and in particular GRAsp, we denote the set of all genes as nodes genes. An edge symbolizes a regulatory relationship between two genes. 
+
+  There are a few other terms that will be helpful when discussing the output of MERLIN. The first is a **module**. In graph theory, the idea of a module is contextual but usually consists of a group of nodes with some shared property. In MERLIN we use modules to denote set of genes which are co-expressed and co-regulated. For more details on the idea of a MERLIN module see the section **MERLIN is a module constrained network**. The second, term is **degree**. The degree of a node is the number of edges that contain that node in a graph. A large degree indicates nodes that are highly connected. The final term is **neighbor**. We say two nodes are neighbors if an edge exists between those two nodes. The neighborhood of a node is all other nodes that are connected to it. These three concepts will provide a basic framework for discussing patterns in the network as well as understanding the outputs in the GRAsp tables (see section **Overview of the Display**).
+</details>
+
+---
+
+# How to use GRAsp 
+MERLIN is a powerful technique for leveraging data from multiple sources and making global prediction of gene regulation. However, interpreting a global regulatory network is challenging due to the large number of predicted regulatory relationships. To overcome this challenge we have developed a visualization framework for our *A. fumigatus* network called GRAsp. GRAsp allows users to search the gene regulatory network to for network components that may be relevant to their research. Currently GRAsp supports searching the network via a list of genes, searching MERLIN modules, by GO-term, and using network diffusion. To toggle between these choices, select the corresponding search criteria in the **search method** dialog box. 
+
+
+
+## Searching via a list of genes: 
+This option corresponds to the search method labeled **Gene List**. When selected, a new toggle button will appear called **Select List Type**. This allows the user to specify how they would like to input a list of genes. If the **Select** button is selected in the **Select List Type**, then the user can enter genes one at a time via the **Genes** field. The **Genes**  field allows user to enter genes using either the systematic name (AFUA_3G11330) or with a common name (atfA). As genes are entered into the **Genes** field, they will begin to propagate the display spaces. As more nodes are added, subnetwork components (edges) will appear as they become relevant. If the **File** button is selected instead of **Select**, then the user can upload a file containing a list of genes. This file should be formatted one gene per row.
+
+
+#### Including additional genes buttons:
+Beneath the method for selecting a list (either the **Genes** search field or the **Cell List File** upload button) the user can find three buttons for including additional genes. The first button is labeled **Steiner Tree**. When this option is selected GRAsp attempts to find a minimum set of nodes that are required to connect all nodes in the search field and adds them to the display. Unfortunately, there is no efficient algorithm for generating such a minimum set, so we use a greedy approach to find an approximation. The greedy method begins by finding the two closest nodes in the search list and connecting them via the minimum path between them. It then finds the next closest node to the growing sub graph and continues to add until all genes are included. The set of edges that are used to connect these minimal set of nodes will be labeled red when this option is selected.  The **Module** button will display all genes associated with any MERLIN modules in the module table. Genes are considered associated if they are either directly in the module or an enriched regulator of the module. An enriched regulator is a regulator for which most of its targets are in the module. The other button labeled **Neighbors** is more inclusive than the **Module** button. If this feature is select, all genes with a shared regulatory relationship as those in the gene list are displayed. The feature can be overly inclusive and convolute key regulators but can be useful especially when only a limited number of genes are in the current gene list. 
+
+These buttons also work well together. When more than one button is selected there is an order in which the operations are performed. GRAsp always starts by finding the Steiner tree, then follows by adding the modules associated with genes in the Steiner tree (or the gene list if Steiner tree is not selected), followed by finding all the neighbors of the previous two steps. For example consider the case where two secondary metabolite genes are selected, specifically, fmaD and ftmF. These genes are both enzymes that are required for the production of two different secondary metabolites (fumagillin and fumitremorgin respectively). When these two genes are searched without any including any additional genes, they appear in two separate modules and do not appear to be related. Next lets added the Steiner Tree node option. We can see that these two genes are in fact closely related since they are only two regulators apart. Adding the modules show that these genes are actually in modules that appear to be enriched with secondary metabolite genes. Finally, when adding the neighbors options we can see many shared regulators between these modules including  fumR and AFUA_1G14945. This results suggests that the two secondary metabolites may be co-regulated.  
+
+## Search using MERLIN modules: 
+Each MERLIN module is assigned a numeric value. Searching by a module will show all genes within that module as well as its enriched regulators. This is likely not the best way to get started using GRAsp as the module numbers are generic. However, it can be useful if you know the module assignment of a particular gene and want to isolate it to determine its regulators.
+
+## Search via GO term: 
+This is a great search method is you are interested in a general biological process. In this case, the user can select from any of the GO terms for which there is an enriched module. Then all modules with the related GO term are displayed simultaneously. More specific GO terms will result in smaller networks. 
+
+## Seach via network diffusion
+This is the most unique of the four search methods and can be confusing to people who are just learning about network analysis. This method allows the user to incorporate additional knowledge about a system into the analysis in order to try and prioritize all genes. One way of thinking about this information is to think about it as a nodal property. A nodal property is any property that can be assigned to a node, for example a gene name. We can also do this with numerical values. An example may be log p-value in a differential expression analysis experiment. When we associated these p-value with specific genes, we are telling our network which genes are significantly affected by our experiment. We use the node diffusion algorithm to extrapolate additional information about the experiment from the network structure. We allow the nodal values to diffuse across the network. Once diffusion is complete, We can then prioritize nodes based on the signal strength.
+
+The required input file should be a list of genes followed by an associated value and should be tab deliminated. When this mode is select, all nodes will receive a score. The user can select the top percent of nodes to display. The results of diffusion have to be analyzed within the context of the initial data. If the log fold p-value is used, then the output diffusion score will indicate the importance of the node to a particular experiment. When using this search method, node sizes are scaled in the network visualization frame to demonstrate their importance.
+
+Here is a brief example. Imagine that you collect RNA-seq data over the course of a alcohol exposure experiment. In reality we may see hundreds of genes with change in expression and perhaps a hundred would be significant. Instead, for simplicity lets say that three genes show a significant change in expression. HelD1, HelD2, and HelE all show an 3 fold increase in expression. They all have a significant p-value of 1.0E-3. If we modify the p-values by talking the -log value then they would all have a score of 3.0. Lets use these in our diffusion. Our input file would look like this, 
+
+AFUA_4G14820    3.0<br>
+AFUA_4G14840    3.0<br>
+AFUA_4G14850    3.0<br>
+
+When we apply diffusion using these nodes, we will get a global score for all genes. Our top 5 scores might be, Skn7_nca, ftmPT1, ftmA, AFUA_1G14945_nca, srd1. These genes are all closely linked to the HelD1, HelD2, HelE components of the network and might be related to the biological process. This is a simple example and may not highlight the power of inference technique. When many genes show significant differential expression, diffusion gives a way or priortizing the regulators of interest.
+
+---
+
+# Overview of the Display
+GRAsp displays networks in three different methods. First, sub networks are displayed in a network visualization frame. Beneath this frame there is a nodes table showing the genes in the current display as well as some additional information about then. Finally, there is a modules table which displays information about the modules that are currently included in the network. Each of these can used to generate new hypothesis.
+
+## The network visualization frame
+The network visualization frame display nodes in that match the search criteria. Nodes can be colored in two different ways. If the **Node Color By** option is set to **Module**, all nodes will be colored by the MERLIN module assignment. Gray nodes indicate nodes that are not in a module assignment. The other option is to color by **Regulator**. In this case nodes are colored by if they are on the regulator list. Regulators are colored red, and targets are colored blue. The main purpose of this frame is to show the network connectivity related to the genes matching the search criteria. To save the current display as an interactive html, first enter an name into the **Save File** box. Then hit the **Save Network** push button. 
+
+
+## Nodes table 
+The nodes table is used to give additional information on all nodes in the that are currently in the network display. Each column can be sorted by an ordering placed on the column (alpha-numeric ordering). Below is a brief description of the elements in the nodes table. 
+
+* Gene Name - this is the systematic name of each gene. Each of these also acts as a hyperlink to  fungi-db page. 
+* module - The genes MERLIN module assignment.This is the number to use in the search my module box if you want to look at a set of related genes. 
+* go - The gene ontology terms related tot eh gene of interest. 
+* Common Name - if there is a common gene name it is displayed here. Otherwise it is the systematic name. All names are based on the fungi-db database. There could be names that are missed due to fungi-db not being up to date. Also, sometimes a gene has two names due to being named by two different labs, e.g. FumR is also called FapR (the transcrlptional regulatory of the fumagillin/pseurotin gene clusters).
+* Description - This is fungi-db discription of the gene function. 
+* neighbors - A list of genes that are connected to the gene listed under Gene Name. This is only as good as the latest analysis. It is helpful for you to do your own blast analysis.
+* degree - The number of genes in the neighbors list. 
+
+The current nodes table can be saved by first placing a name in the **Save File** box. Then hit the download button. The table can be saved as an csv, excel, or pdf format. 
+ 
+
+## Module table
+The module table is used to give additional information on all modules in the that have nodes in the network display. Each column can be sorted by an ordering placed on the column (alpha-numeric ordering). Below is a brief description of the elements in the module table. 
+
+* module - The current module number. 
+* Genes on List - these are the gene that match the current search criteria that are on the module. 
+* Genes - A list of all genes in the module. 
+* Gene list enrichment p-value - This shows the enrichment p-value of the genes on list. Lower p-values indicate a better match to the search criteria. For more information see the note on enrichment below. 
+* GO - A list of associated GO terms. Each GO term is displayed, followed by its enrichment p-value, then followed by all the genes in the module that have the associated p-value. For more information see the note on enrichment below. 
+* Regulators - A list of enriched regulators in the module. Each enriched regulator is displayed, followed by its enrichment p-value, followed by a list of its targets within the module. For more information see the note on enrichment below. 
+
+The current module table can be saved by first placing a name in the **Save File** box. Then hit the download button. The table can be saved as an csv, excel, or pdf format. 
+ 
+
+
+# What is MERLIN 
+<details> 
+  <summary> </summary>
+Merlin (Modular regulatory network learning with per gene information) is a computational algorithm that attempts to learn a gene regulatory network that best predicts the observed gene expression. The goal of the algorithm is to learn connection between regulators (transcription factors or other signaling encoded signaling proteins) and their target genes. To accomplish this task MERLIN builds a probabilistic graphical model which maximizes the likelihood of observing the expression data given the network structure. This is done through a greedy expectation maximization algorithm which takes a random initialization, learns distributional parameters that best describe the data, and updates iteratively until it converges to an optimal solution. For more details see the original MERLIN paper [Roy et al., PLOS Computational Biology, 2013](https://doi.org/10.1371/journal.pcbi.1003252 "Named link title").
+
+## MERLIN is a module constrained network    
+Network structure prediction algorithms fall into two broad classes, per-gene and per-module algorithms. A per-gene algorithm attempts to predict regulators for each gene independently. These algorithms are powerful because they give high resolution predictions. However, given the limitations of inferring regulatory networks from data, these algorithms can produce many spurious regulatory relationships and are prone to producing false relationships. Per-module networks attempt to correct for this. Instead of learning relationships for each gene, genes are grouped into sets called modules. Regulators for each module are learned simultaneously and all genes within a module are assumed to have the same set of regulators. This technique allows the algorithm to leverage more information when making regulatory predictions but lead to lower resolution networks. In comparison to the other two methods, MERLIN falls somewhere in the middle and is considered a module constrained network. In a module constrained network, groups of genes are still clustered together into modules but regulators are learned on a per gene bases. MERLIN makes use of the module structure by encouraging a common set of regulators for genes within the same module however if the relationship between a regulator and a target is not predictive of a genes expression than the regulatory relationship is not formed. Similarly MERLIN allows for the detection of co-regulatory relationships where a particular gene may be regulated by a key module regulator and also a second regulatory factor that is gene specific. 
+
+## Estimating confidence of MERLIN predictions  
+MERLIN learns a graphical model in greedily. This means that the optimal solution found by MERLIN may not be the absolute optimum. In fact, learning network structure falls into a class of problems called NP hard. This means that there will likely never be an efficient algorithm to determine an absolute optimal network structure. Further, the output of MERLIN depends on the random initialization, i.e. how genes are grouped into modules. Given all of this inherit variability in our prediction algorithm its an important problem to try and say which of regulatory relationships are most supported by the data. We do this through a technique called bootstrapping which allows us to estimate the confidence of a learned relationship.Bootstrapping is a common statistical technique where a model is learned on a subset of data, and compared with other inferred models. In the case of MERLIN, we randomly sample multiple subsets of RNA-seq experiments, and infer a regulatory network each time using MERLIN. We then count the number of times each edge occurs in all of our inferred models and use this as a confidence estimation. In the case of GRAsp, we are showing all edges that have occurred in 80% or more of the models. 
+
+## What is the difference between MERLIN and MERLIN-P-TFA?
+While MERLIN was a strong start to inferring regulatory relationship, like many other algorithms the predicted regulatory relationships did not correspond well with true relationships derived experimentally (ChIP-seq or transcription factor KO experiments). To improve the consistency of the inferred MERLIN networks, we have implemented new algorithms called MERLIN-P and MERLIN-P-TFA which leverage additional information, improve the inference of a regulatory network. The P in MERLIN-P and MERLIN-P-TFA stands for prior. These models allow the user to incorporate  transcription factor binding motif, additional chIP-seq data, and KO information into the network inference algorithm which improve consistency in the network inference results. The additional information is incorporated a known prior network where hypothesized or known regulatory relationships between regulators and their target genes are included. MERLIN then learns a new regulatory network an additional term that penalizes differences between the inferred regulatory network and the prior. For more information see the original MERLIN-P paper [Siahpirani A. F. and Roy S., Nucleic Acids Res. 2017](https://doi.org/10.1093/nar/gkw963 "Named link title"). 
+
+MERLIN-P-TFA takes the usage of prior information one step farther. It is well known that effects of transcription factors and their binding is not necessarily controlled by the level of active transcription of that particular transcription factor. Instead, additional factors such as phosphorylation events and ligand binding can play additional roles in the activity of transcription factors. These post transcriptional modification cannot directly be measured in RNA-seq data thus making it difficult to predict regulatory relationships.To combat this problem, MERLIN-P-TFA attempts to estimate transcription factor activity (TFA) using a method call network component analysis (NCA). The goal of this method is to use the prior network established from the additional data to infer if the regulator was active. This is done by trying to predict the expression of a gene using just the prior network. The result of this algorithm is a new profile for a subset of genes for which we have a critical threshold of prior information. This profile is an estimation of the regulators activity that is based on the data. MERLIN-P+TFA is currently unpublished but look for our paper soon. 
+
+</details>
+---
+

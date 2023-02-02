@@ -5,16 +5,16 @@ library(DT)
 
 
 
-all_nodes_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_nodes.txt"
-edge_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/output_net_0_8.txt"
-module2gene_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset.txt"
-module_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset_enrichAnalyzer.txt"
-go_file = "/Volumes/wid/projects7/Roy-Aspergillus/Data/GeneOntology/GO_enrichAnalyzer_idx/afumgotermap.txt"
-regulator_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments/merlin.0_8.0_3_details.txt"
-go_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments/go.0_3_details.txt"
-gene2genename_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_name_map.txt"
-gene_desc_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_description_file.txt"
-regulator_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_transcription_factors.tsv"
+#all_nodes_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_nodes.txt"
+#edge_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/output_net_0_8.txt"
+#module2gene_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset.txt"
+#module_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset_enrichAnalyzer.txt"
+#go_file = "/Volumes/wid/projects7/Roy-Aspergillus/Data/GeneOntology/GO_enrichAnalyzer_idx_v2/afumgotermap.txt"
+#regulator_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments_v2/merlin.0_8.0_3_details.txt"
+#go_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments_v2/go.0_3_details.txt"
+#gene2genename_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_name_map_nancy.txt"
+#gene_desc_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_description_file.txt"
+#regulator_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_transcription_factors.tsv"
 
 
 
@@ -35,12 +35,22 @@ genes2modules <- genes2modules %>%
   select(feature, module)
 
 go <- read_tsv(go_file, col_names = TRUE) %>% 
-  rename("feature"= "GeneName") %>%
-  rename("go" = "GOTerm") %>%
-  select(feature, go) %>%
+  rename("feature"= "GeneName") %>% 
+  rename("go" = "GOTerm") %>% 
+  select(feature, go)
+
+go_IC <- go %>% 
+  group_by(go) %>%
+  summarise(freq = n()) %>%
+  mutate(IC = -log(freq/sum(freq)))
+
+go <- left_join(go, go_IC) %>%
   group_by(feature) %>%
-  chop(go) %>%
-  ungroup()
+  arrange(desc(IC), .by_group = TRUE) %>% 
+  select(feature, go) %>% 
+  chop(go) %>% 
+  ungroup() %>% 
+  arrange(feature)
 
 regulators <- read_tsv(regulator_list_file, col_names = FALSE) %>%
   rename("feature" = "X1") %>%
@@ -66,6 +76,8 @@ nodes$regulator <- sapply(nodes$regulator, function(x){ifelse(is.na(x), 'tar', '
 nodes$module <- sapply(nodes$module, function(x){ifelse(is.na(x), -9999, x)})
 
 nodes$`Common Name`[which(is.na(nodes$`Common Name`))] = nodes$feature[which(is.na(nodes$`Common Name`))]
+nodes$geneSuper <- str_sub(nodes$`Common Name`, 1, 3)
+nodes <- nodes %>% mutate(geneSuper = str_replace(geneSuper,'AFU', "Unlabeled"))
 
 nca_idx <- which(grepl('_nca', nodes$feature))
 for(idx in nca_idx){
@@ -112,8 +124,11 @@ go_enrich <- read_tsv(go_enrich_file, col_names = c("module", "go",
                       "go_pvalue", "go_correct_pvalue", "go_num_tot_genes", 
                       "num_tot_go_genes", "num_module_genes", 
                       "num_module_go_genes", "go_enrichment", "go_genes"))
-go_enrich$go_genes <- str_split(go_enrich$go_genes, ';')
-go_enrich <- nest(go_enrich, GO=c("go", "go_pvalue", "go_correct_pvalue", 
+go_enrich$go_genes <- str_split(go_enrich$go_genes, ';') 
+go_enrich <- left_join(go_enrich, go_IC) %>%
+  group_by(module) %>% arrange(desc(IC), .by_group = TRUE) %>% 
+  mutate(IC = NULL, freq = NULL) %>% 
+  nest(GO=c("go", "go_pvalue", "go_correct_pvalue", 
                                   "go_num_tot_genes", "num_tot_go_genes", 
                                   "num_module_genes", "num_module_go_genes", 
                                   "go_enrichment", "go_genes"))
@@ -270,7 +285,7 @@ loadScoreVector <- function(Net, score_data) {
   for( i in 1:length(score_data[[1]])){ 
     nodes <- nodes %>%
       mutate(score = replace(score, 
-             str_detect(feature, score_data %>% slice(i) %>% pull(feature)),
+             which(str_detect(feature, score_data %>% slice(i) %>% pull(feature))),
              score_data %>% slice(i) %>% pull(score)))
   }
   return(nodes$score)
@@ -336,9 +351,11 @@ goSubgraph <- function(Net, Module, enrich_2_module, go_term){
   return(sub_graph)
 }
 
-diffScoreSubgraph <- function(Net, percentile){
-  val <- quantile(Net %N>% pull(score), probs = percentile)
-  genes <- Net %N>% filter(score >= val) %>% pull(feature)
+diffScoreSubgraph <- function(Net, min_targets, top_regs){
+  nodes <- Net %N>% as_tibble()
+  nodes <- nodes %>% arrange(desc(score)) %>% filter(regulator == 'scr') %>% filter(degree >= min_targets)
+  top5 <- nodes  %>% slice(1:top_regs)
+  genes <- unlist(top5$neighbors) 
   sub_graph <- induceSubraph(Net, genes) %E>%
     mutate(color_code = "#666")
   return(sub_graph)
@@ -638,10 +655,10 @@ getModuleID <- function(Net, node_name){
   return(module_id)
 }
 
-prepNodeTable <- function(Nodes_Table){
+prepNodeTable <- function(Nodes_Table, disp_num){
   Nodes_Table <- Nodes_Table %>% mutate(.tidygraph_node_index = NULL, enriched_modules = NULL) %>%
     rowwise() %>% 
-    mutate(go = paste(unlist(go), collapse = ' <br/>')) %>% 
+    mutate(go = paste(unlist(setdiff(go[1:disp_num], NA)), collapse = ' <br/>' )) %>% 
     mutate(neighbors = paste(unlist(sapply(neighbors, function(x) 
     if(x %in% genename_map$feature_name){
       x <- str_pad(genename_map$common_name[which(x == genename_map$feature_name)], 12, side = "both")
@@ -651,18 +668,20 @@ prepNodeTable <- function(Nodes_Table){
     rename("Gene Name" = "feature") %>%
     mutate("Gene Name" = sprintf('<a href="https://fungidb.org/fungidb/app/record/gene/%s" target="_blank" rel="noopener noreferrer"> %s</a>', str_replace(`Gene Name`, '_nca', ''), `Gene Name`)) %>%
     mutate("id" = NULL) %>%
-    mutate("regulator" = NULL)
+    mutate("regulator" = NULL) %>%
+    mutate(geneSuper= NULL)
   
   Nodes_Table$module[which(Nodes_Table$module == -9999)] <- NA
   return(Nodes_Table)
 }
 
-prepModuleTable <- function(Module_Table, method){
+prepModuleTable <- function(Module_Table, method, disp_num){
   GO <- Module_Table %>% select(module, GO) %>%
     unnest(GO)
+  GO <- GO %>% group_by(module) %>% slice(1:min(disp_num, nrow(GO)))
+  
   regulators <- Module_Table %>% select(module, regulators) %>%
     unnest(regulators)
-  
   
   GO <- GO %>% rowwise%>% 
     mutate(GO = ifelse(length(module) > 0, sprintf("GO term: %s<br/> module corrected p-value: %.02e<br/>Module Genes: %s<br/>", go, go_correct_pvalue, paste(unlist(sapply(go_genes, function(x) 
