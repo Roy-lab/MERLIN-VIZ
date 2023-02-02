@@ -7,21 +7,27 @@ library(scales)
 library(DT)
 library(webshot)
 library(htmlwidgets)
+library(RColorBrewer)
+library(shinyBS)
 
 ## Load in aux functions and data
 source('aux_functions.R')
+source('printerFunction.R')
 #MyClickScript <- 'Shiny.setInputValue("save_module", module_name)'
 
 all_gene_names <- unique(c(genes, genename_map$common_name))
+palettes <- tibble(rownames_to_column(brewer.pal.info, var = 'pal'))
+igraph_layout <- c('Fruchterman-Reingold'='nicely', 'Davidson-Harel'='dh', 'Kamada-Kawai'='kk', 'Large graph layout'= 'lgl', 'Force directed' = 'drl')
 
 ################################# ui ###########################################
-ui <- fluidPage(
+ui <- navbarPage("GRAsp",
+  tabPanel("Visualize",
     fluidRow(
       column(2, 
              radioButtons("common_name", h4("Gene Name Format"),
                           choices = list("Common" = 1, "Standard" = 2)),
              radioButtons("group_by", h4("Node Color By"), 
-                          choices = list ("Module" = 'module', "Regulator" = "regulator")),
+                          choices = list ("Module" = 'module', "Regulator" = "regulator", "Gene Family"= 'geneSuper')),
              selectInput(inputId = "method", h4("Search Method"),
                          c("", Modules = "module", 'GO Term' = "go_term", 
                            'Gene List' = 'list', "Node Diffusion" = "diff")
@@ -35,10 +41,7 @@ ui <- fluidPage(
              ),
              conditionalPanel(
                condition = "input.method == 'go_term'",
-               selectInput(
-                 inputId = "go_term", "GO terms",
-                 sort(enriched_go_terms)
-               )
+               selectInput(inputId = "go_term", label = "GO terms", choices = sort(enriched_go_terms))
              ),
              conditionalPanel(
                condition = "input.method == 'list'",
@@ -62,20 +65,57 @@ ui <- fluidPage(
                conditionalPanel(
                  condition = "output.diffFileUploaded",
                  selectInput(inputId = "kernel", "Lambda", c(1, 10, 100, 1000)),
-                 sliderInput(inputId = "percentile", "Node Percentile", min = 90, max = 100,
-                             value = 95, step = .1),
+                 numericInput(inputId = "min_neigh", label = "Minimum Number of Targets", value = 5),
+                 numericInput(inputId = "disp_regs", label = "Number of Regulators to Display", value = 5),
+                 #sliderInput(inputId = "percentile", "Node Percentile", min = 90, max = 100,
+                 #          value = 95, step = .1),
                  actionButton("refresh_diff", "Refresh")
                )
              ),
              checkboxGroupInput(inputId = "show_gene_names", label = h4("Show Gene Names"), 
                                 c("Show Names" = "sh")),
-             textInput("file_name", h4("Save File"), value = "file_name"),
-             downloadButton("save_net_image", "Save Network")
+             numericInput(inputId = "disp_go", "Number of GO in Table", value = 5),
+             
+             actionButton("openPrinter", "Save Network")
              
       ),
-      column(10,forceNetworkOutput("network",height = "750px"))
+      column(10,forceNetworkOutput("network",height = "750px")),
+      bsModal("modalPrinter", "Print Image", "openPrinter", size = "large", 
+              fluidRow(
+                plotOutput(outputId = "print_net", click = 'plot_click'),
+                verbatimTextOutput("node_name")
+              ),
+              fluidRow(
+                column(4,
+                      selectInput(inputId = 'print_layout', label = 'Node layout', choices = igraph_layout, multiple = FALSE),
+                      numericInput(inputId = 'print_min_genes', label = "Minimum number of genes in component", value = 0, min = 0),
+                      selectInput(inputId = 'print_disp_names', label = 'Names to display', choices = NULL, multiple = TRUE, selectize = TRUE),
+                      checkboxInput(inputId = 'print_name_bool', label = "Name in nodes", value = TRUE),
+                      conditionalPanel(
+                        condition = "input.print_name_bool == 0", 
+                        numericInput(inputId = 'print_nudge_y', label = "Nudge labels", value = 0.3, min = 0, step = 0.1),
+                        sliderInput(inputId = 'print_text_angle', label = "Text angle", value = 0, min = -90, max = 90, step = 15)
+                      )
+                  ),
+                  column(4,
+                      radioButtons(inputId = "print_group_by", label = "Node color by", 
+                                  choices = list ("Module" = 'module', "Regulator" = "regulator", "Gene Family"= 'geneSuper'), selected =  'module'),
+                      selectInput(inputId = 'print_node_pal', label = 'Color pallette', choices = palettes$pal, multiple = FALSE, selected = 'Pastel1'),
+                      numericInput(inputId = 'print_max_node_size', label = "Node size", value = 8, min = 1),
+                      numericInput(inputId = 'print_font_size', label = "Font size", value = 8, min = 1)
+                  ),
+                  column(4,
+                      numericInput(inputId = 'print_expand_x', label = "Expand X", value = 0, step = 0.1),
+                      numericInput(inputId = 'print_expand_y', label = 'Expand Y', value = 0, step = 0.1),
+                      numericInput(inputId = 'print_image_height', label = 'Image height (in)', value = 8, min = 1),
+                      numericInput(inputId = 'print_image_width', label = 'Image width (in)', value = 8, min = 1),
+                      textInput("print_file_name", "Figure name", value = "file_name"),
+                      downloadButton("saveFig", "Save figure") 
+                  ))
+    )
     ),
     fluidRow(
+      textInput("file_name", "Table File Name", value = "file_name"),
       column(12,
              tabsetPanel(
                id = 'table',
@@ -83,24 +123,10 @@ ui <- fluidPage(
                tabPanel("modules", DT::dataTableOutput("module_table"))
                )
       )
-      
-      #column(4,
-      #        h4("Node Info"), 
-      #        downloadButton(outputId = "save_node_info", label = "Save Node"),
-      #        htmlOutput(outputId = "node_info")
-      #),
-      #column(4, 
-      #       h4("Module Info"),
-      #       fluidRow(
-      #        column(1,downloadButton(outputId ="save_module_info", label = "Save Module")),
-      #        column(1, offset = 2,
-      #        conditionalPanel(
-      #          condition = "input.method != 'module'",
-      #          downloadButton(outputId = "save_all_module_info", label = "Save all Modules"))
-      #        )
-      #       ),
-      #       htmlOutput(outputId = "module_info")
-      #       )
+    )
+  ),
+  tabPanel("Help",
+           fluidPage(htmltools::tags$iframe(src = "Help.html", width = '100%',  height = 1000,  style = "border:none;")) 
   )
 )
 ##################### Server Functions ########################################
@@ -114,9 +140,15 @@ server <- function(input, output, session) {
   sub_net <- reactiveVal()
   gene_name <-reactiveVal()
   percentile <- reactiveVal(95)
+  min_neigh <- reactiveVal(5)
+  disp_regs <- reactiveVal(5)
+  diff_nodes <- reactiveVal()
+  render_diff <- reactiveVal(FALSE)
+  gg_out_plot <- reactiveVal(NULL)
+  disp_nodes <- reactiveVal(NULL)
+  
   lambda <- reactiveVal(1)
   gene_list <- reactiveVal(NULL)
-  
   
   
   ##### File IO ################
@@ -140,6 +172,27 @@ server <- function(input, output, session) {
     print(lambda())
   })
   
+  observeEvent(input$min_neigh, {
+    min_neigh(input$min_neigh)
+    render_diff(TRUE)
+  })
+  
+  observeEvent(input$disp_regs, {
+    disp_regs(input$disp_regs)
+    render_diff(TRUE)
+  })
+  
+  observeEvent(render_diff(), {
+    print("IN Func")
+    nodes <- diff_nodes()
+    if(!is.null(nodes$score)){
+      Net <- left_join(Net, nodes)
+      sub_net(diffScoreSubgraph(Net, min_neigh(), disp_regs()))
+    }
+    render_diff(FALSE)
+    print(render_diff())
+  })
+  
   observeEvent(input$gl,{
     print(length(Net %N>% pull(feature)))
     print(input$gl)
@@ -157,8 +210,6 @@ server <- function(input, output, session) {
       gene_list(g)
     }
   }) 
-  
-
   
   output$fileUploaded <- reactive({
     return(!is.null(sub_net()))
@@ -186,8 +237,11 @@ server <- function(input, output, session) {
   })
   
   observeEvent(diff_file_path(), {
+        id <- showNotification("Computing Defused Scores...", duration = NULL, closeButton = FALSE)
+        on.exit(removeNotification(id), add = TRUE)
         fp <- diff_file_path()
         score_list <- read_csv(file = fp, col_names = c("feature", "score"))
+        
         if(all(is.na(score_list$score))){
           score_list<- score_list %>% mutate(score = 100)
         }
@@ -212,7 +266,9 @@ server <- function(input, output, session) {
           }
           Net <- computeDiffusionScore(Net, score_list, k1000_sparse)
         }
-        sub_net(diffScoreSubgraph(Net, percentile()/100))
+        diff_nodes(Net %N>% as_tibble())
+        print("HERE:::")
+        render_diff(TRUE)
   })
   
   observeEvent(file_path(), {
@@ -227,19 +283,35 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$search_additional, {
-    if(length(gene_list()> 0 )){
+    if(length(input$search_additional) == 0 ){
+      if(length(input$gl) ==0){
+        gene_list(NULL)
+      }else{
+      temp <- input$gl
+      g <- sapply(temp, function(x) 
+        if(x %in% genename_map$common_name){
+          x <- genename_map$feature_name[which(x == genename_map$common_name)]
+        }else{
+          x <- x
+        })
+      gene_list(g)
+      }
+    }
+    if(length(gene_list()> 0)){
     sub_net(geneListSubgraph(Net, Module, gene_list(), input$search_additional))
     }
-  })
+  }, ignoreNULL = FALSE)
   
   
   observeEvent(input$steiner, {
+    id <- showNotification("Generating Stiener Tree...", duration = NULL, closeButton = FALSE)
+    on.exit(removeNotification(id), add = TRUE)
     st <- buildSteinerTrees(Net, gene_list())
     st <- st %E>%
       mutate(is_steiner = TRUE) %N>%
       mutate(is_steiner = TRUE)
     sub_net(graph_join(sub_net(), st) %>%
-      mutate(color_code = if_else(is_steiner, "#FF0000", "#666")))
+      mutate(color_code = if_else(is_steiner, "#F9B6AF", "#BEBEBE")))
     gene_list(sub_net() %N>% pull(feature))
   })
   
@@ -247,53 +319,9 @@ server <- function(input, output, session) {
   sub_net(tbl_graph())
   })
   
-  output$save_net_image <- downloadHandler(
-         filename = function(){ifelse(str_length(input$file_name) > 0, paste(input$file_name, '.html', sep = ''), 'file.html')},
-         content = function(file) {
-         S<-sub_net()
-         if(isempty(S %N>% as_tibble())){
-         }else{
-           S_tables <- graph2NodeEdgeTables(S)
-           S_nodes <- S_tables[[1]]
-           S_edges <- S_tables[[2]]
-           S_edges <- S_edges %>% add_row(from = 0, to = 0, weight = 0)
-           
-           
-           if(input$common_name == 1){
-             names <- "Common Name"
-           }else if(input$common_name == 2){
-             names <- "feature"
-           }
-           
-           if(is.null(input$show_gene_names)){
-             op <- 0
-             fs <- 40 
-           }else{
-             op <- .25
-             fs <- 12
-           }
-           
-           if(input$method == "diff"){
-             S_nodes <- S_nodes %>% mutate(size = rescale(score, to = c(4, 16)))
-             g <- forceNetwork(Links = S_edges, Nodes = S_nodes,
-                               Source = "from", Target = "to",
-                               Value = "weight", NodeID = names,
-                               Group = input$group_by, Nodesize = "size", opacity = 1, opacityNoHover = op,
-                               zoom = TRUE, fontSize=fs, radiusCalculation = JS("d.nodesize"),
-                               charge = -10) 
-           }
-           else{
-             g <- forceNetwork(Links = S_edges, Nodes = S_nodes,
-                               Source = "from", Target = "to",
-                               Value = "weight", NodeID = names,
-                               Group = input$group_by, linkColour=S_edges$color_code,
-                               opacity = 1, opacityNoHover = op, zoom = TRUE, fontSize=fs,
-                               charge = -20)
-           }
-           saveWidget(g, file)
-       }})
-  
-
+  observeEvent(sub_net(), {
+    disp_nodes(sub_net() %N>% as_tibble())
+  } )
   
   ############## Main Render ######################
   output$table  = DT :: renderDataTable({
@@ -306,7 +334,7 @@ server <- function(input, output, session) {
     if(isempty(S %N>% as_tibble())){
     }else{
     S_tables <- graph2NodeEdgeTables(S)
-    S_nodes <- prepNodeTable(S_tables[[1]])
+    S_nodes <- prepNodeTable(S_tables[[1]], input$disp_go)
     DT::datatable(S_nodes, escape = FALSE, 
                   extensions = 'Buttons', options = list(
                     dom = 'Blfrtip',
@@ -333,7 +361,7 @@ server <- function(input, output, session) {
     curr_modules <- unique(c(S_tables[[1]] %>% pull(module), unlist(S_tables[[1]] %>% pull(enriched_modules))))
     Module <- computeEnrichment(Module, S_tables[[1]] %>% pull(feature), 
                                 length(Net %N>% pull(feature)))
-    ModT <- prepModuleTable(Module %>% filter(module %in% curr_modules), input$method)
+    ModT <- prepModuleTable(Module %>% filter(module %in% curr_modules), input$method, input$disp_go)
     DT::datatable(ModT, escape = FALSE,
                   extensions = 'Buttons', options = list(
                     dom = 'Blfrtip',
@@ -370,17 +398,30 @@ server <- function(input, output, session) {
       op <- 0
       fs <- 40 
     }else{
-      op <- .25
-      fs <- 12
+      op <- .75
+      fs <- 25
     }
     
     if(input$group_by == "regulator"){
       colorScale = JS('color=d3.scaleOrdinal([`#fb8072`, `#80b1d3`]), color.domain(["src","tar"])');
+    }else if(input$group_by == "module"){
+      num_mods <- length(setdiff(unique(S_nodes %>% pull(module)), -9999))
+      max_colors <- palettes$maxcolors[which(palettes$pal == "Pastel1")]
+      pal <- brewer.pal(max(3, min(max_colors, num_mods)), "Pastel1")
+      if(max_colors < num_mods){
+        pal <- extend_pallette <- colorRampPalette(pal)(num_mods)
+      }
+     colorScale = JS(paste0('color=d3.scaleOrdinal([ `#BEBEBE`, ', paste(sprintf('`%s`', pal), collapse = ', '), ']), color.domain([-9999])'))
+    }else if(input$group_by == "geneSuper"){
+      num_supers <- length(setdiff(unique(S_nodes %>% pull(geneSuper)), "Unlabeled"))
+      max_colors <- palettes$maxcolors[which(palettes$pal == "Pastel1")]
+      pal <- brewer.pal(max(3, min(max_colors, num_supers)), "Pastel1")
+      if(max_colors < num_supers){
+        pal <- extend_pallette <- colorRampPalette(pal)(num_supers)
+      }
+      colorScale = JS(paste0('color=d3.scaleOrdinal([`#BEBEBE`, ', paste(sprintf('`%s`', pal), collapse = ', '),"]), color.domain(['Unlabeled'])"))
     }
-    else{
-      colorScale = JS('color=d3.scaleOrdinal([`#bebebe`, `#8dd3c7`,`#f4f452`,`#bebada`,`#fb8072`,`#80b1d3`,`#fdb462`,`#b3de69`,`#fccde5`,`#ccebc5`,`#bc80bd`]), color.domain([-9999])');
-    }
-    
+
     if(input$method == "diff"){
       S_nodes <- S_nodes %>% mutate(size = rescale(score, to = c(4, 16)))
       forceNetwork(Links = S_edges, Nodes = S_nodes,
@@ -395,11 +436,101 @@ server <- function(input, output, session) {
                  Value = "weight", NodeID = names,
                  Group = input$group_by, linkColour=S_edges$color_code,
                  opacity = 1, opacityNoHover = op, zoom = TRUE, fontSize=fs, colourScale = colorScale, 
-                 charge = -20)
+                 charge = -10)
     }
     }
   })
   
+  #######  Printer Setup 
+  observeEvent(input$openPrinter, {
+    Nodes <- disp_nodes()
+    if(nrow(Nodes) == 0 ){
+      showNotification("Nothing to display.")
+      toggleModal(session, modalId ="modalPrinter", toggle = 'close')
+    }else{
+      if(input$common_name == 1){
+        updateSelectizeInput(session, 'print_disp_names', choices = Nodes %>% pull(`Common Name`), server = TRUE)
+      }else{
+        updateSelectizeInput(session, 'print_disp_names', choices = Nodes %>% pull(feature), server = TRUE)
+      }
+      num_mods <- length(Nodes %>% pull(module))
+      #updateSelectizeInput(session, 'print_node_pal', choices = palettes %>% pull(pal), server = TRUE)
+    } 
+  })
+  
+  
+ output$print_net <- renderPlot({
+   subNet <- sub_net() 
+   subNet <- subNet %N>% mutate(component = group_components()) 
+   keep_component <- subNet %N>% as_tibble() %>% 
+     group_by(component) %>% 
+     summarise(count  = n()) %>% 
+     filter(count >= input$print_min_genes) %>% 
+     pull(component)
+   subNet <- subNet %N>% filter(component %in% keep_component )
+   
+   if(!is.null(input$print_disp_names)){
+    if(input$common_name == 1){
+       subNet <-subNet %N>% mutate(display_name = ifelse(`Common Name` %in% input$print_disp_names, `Common Name`, NA))
+    }else{
+       subNet <-subNet %N>% mutate(display_name = ifelse(`feature` %in% input$print_disp_names, `feature`, NA))
+    }
+   }else{
+     subNet <-subNet %N>% mutate(display_name = NA)
+   }
+   subNet <- subNet %N>% mutate(module = as.character(module)) %>% mutate(module = str_replace(module, '-9999', 'Unlabeled'))
+   
+   edge_color_by <- ifelse('stein' %in% input$search_additional, 'is_steiner', NA)
+   node_size_by <- ifelse(input$method =='diff', 'score', NA) 
+   
+   gg_out_plot(
+   makeSubNetGraph(subNet, names_in_nodes = input$print_name_bool, node_color_by = input$print_group_by, 
+                                  edge_color_by = edge_color_by, node_color_palette = input$print_node_pal, 
+                                  node_size_by = node_size_by, max_node_size = input$print_max_node_size, 
+                                  layout = input$print_layout, focus_nodes = list(), 
+                                  font_size = input$print_font_size, 
+                                  nudge_y = input$print_nudge_y, text_angle = input$print_text_angle, show_legend =input$print_show_legend,
+                                  expand_x = input$print_expand_x, expand_y = input$print_expand_y)
+   )
+   gg_out_plot()
+   })
+ 
+ 
+ 
+ 
+ 
+ output$saveFig <- downloadHandler(
+   filename = function(){ifelse(str_length(input$print_file_name) > 0, paste(input$print_file_name, '.png', sep = ''), 'file.png')},
+   content = function(file){
+     ggsave(file,gg_out_plot(), width = input$print_image_width, height = input$print_image_height,units = 'in')
+   })
+ 
+ 
+ 
+ observeEvent(input$plot_click, {
+   Nodes <- disp_nodes()
+   gg_out<-gg_out_plot()
+   gg_data<-tibble(gg_out$data)
+   if(input$common_name == 1){
+     gg_name  <- nearPoints(gg_data, input$plot_click, threshold = 35, maxpoints = 1) %>% pull(`Common Name`)
+   }else{
+     gg_name <- nearPoints(gg_data, input$plot_click, threshold = 35, maxpoints = 1) %>% pull(feature)
+   }
+   
+   if(!is_empty(gg_name)){
+    if(gg_name %in% input$print_disp_names){
+      updateSelectizeInput(session, 'print_disp_names', choices = Nodes %>% pull(`Common Name`), server = TRUE, selected = setdiff(input$print_disp_names, gg_name))
+    }else{
+      if(input$common_name == 1){
+        updateSelectizeInput(session, 'print_disp_names', choices = Nodes %>% pull(`Common Name`), server = TRUE, selected = c(unlist(input$print_disp_names), gg_name))
+      }else{
+        updateSelectizeInput(session, 'print_disp_names', choices = Nodes %>% pull(feature), server = TRUE, selected = c(unlist(input$print_disp_names), gg_name))
+      }
+    }
+   }
+ })
+
+ 
   ############### Save Features #####################################
   output$save_node_info <- downloadHandler(
     filename = function() {
