@@ -37,15 +37,15 @@ gg <- makeSubNetGraph(subNet, names_in_nodes = TRUE, node_color_by = 'geneSuper'
 
 ggsave('fig3_srbA_srbB_white_font.png', gg, width = 8.5, height = 5, dpi = 900)
 
-gg <- makeSubNetGraph(subNet, names_in_nodes = TRUE, node_color_by = 'geneSuper', 
-                      edge_color_by = NA, node_color_palette = 'Dark2', 
-                      node_size_by = NA, max_node_size = 4, 
-                      layout = 'dh', focus_nodes = list(), 
-                      font_size = 6, nudge_y = 0, text_angle  = 0, show_legend = FALSE, 
-                      expand_x = 1.5, expand_y = 0, font_color = '#000000', unlab_color = '#dddddd')
+#gg <- makeSubNetGraph(subNet, names_in_nodes = TRUE, node_color_by = 'geneSuper', 
+#                      edge_color_by = NA, node_color_palette = 'Dark2', 
+#                      node_size_by = NA, max_node_size = 4, 
+#                      layout = 'dh', focus_nodes = list(), 
+#                      font_size = 6, nudge_y = 0, text_angle  = 0, show_legend = FALSE, 
+#                      expand_x = 1.5, expand_y = 0, font_color = '#000000', unlab_color = '#dddddd')
 
 
-ggsave('fig3_srbA_srbB_black_font.png', gg, width = 8.5, height = 5, dpi = 900)
+#ggsave('fig3_srbA_srbB_black_font.png', gg, width = 8.5, height = 5, dpi = 900)
 
 
 ### Figure 4.A 
