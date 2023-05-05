@@ -3,9 +3,9 @@ library(Matrix)
 ## Clear everything
 rm(list = ls())
 ## Load in network and functions 
-source('aux_functions.R')
-source('printerFunction.R')
-load('net_data.Rdata')
+source('../aux_functions.R')
+source('../printerFunction.R')
+load('../net_data.Rdata')
 
 firstUpper <- function(x){
   substring(x, 1, 1) <- toupper(substring(x,1,1))
