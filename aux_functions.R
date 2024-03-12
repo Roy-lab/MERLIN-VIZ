@@ -110,7 +110,7 @@ edges <- edges %>%
 ### Make Tidy Graph Structure 
 Net <- tbl_graph(nodes= nodes, edges = edges)
 Net <- Net %>%
-  convert(to_undirected) %>%
+  #convert(to_undirected) %>%
   mutate(neighbors = map_local(order = 1, .f = function(neighborhood, node, ...) {
          as_tibble(neighborhood, active = 'nodes')$feature
       }))
@@ -387,8 +387,8 @@ gene_id <- Net %>%
   pull(id)
 
 gene_name <-  Net %>% 
-  filter(feature %in% gene_list) %>%
-  pull(feature)
+	filter(feature %in% gene_list) %>%
+	pull(feature)
 
 dist_matrix <- Net %N>%
   as_tibble() %>%
@@ -411,6 +411,7 @@ return(dist_matrix)
 
 
 buildSteinerTrees <- function(Net, gene_list){
+  Net <- Net %>% convert(to_undirected)
   dist_matrix <- getDistMatrix(Net, gene_list)
   gene_names <- colnames(dist_matrix)[2:length(dist_matrix)]
   dist2graph <- tibble(gene_names)
@@ -668,17 +669,16 @@ prepNodeTable <- function(Nodes_Table, disp_num){
     rename("Gene Name" = "feature") %>%
     mutate("Gene Name" = sprintf('<a href="https://fungidb.org/fungidb/app/record/gene/%s" target="_blank" rel="noopener noreferrer"> %s</a>', str_replace(`Gene Name`, '_nca', ''), `Gene Name`)) %>%
     mutate("id" = NULL) %>%
-    mutate("regulator" = NULL) %>%
-    mutate(geneSuper= NULL)
+    mutate("regulator" = NULL)
   
   Nodes_Table$module[which(Nodes_Table$module == -9999)] <- NA
   return(Nodes_Table)
 }
 
-prepModuleTable <- function(Module_Table, method, disp_num){
+prepModuleTable <- function(Module_Table, method, disp_num  = 5 ){
   GO <- Module_Table %>% select(module, GO) %>%
     unnest(GO)
-  GO <- GO %>% group_by(module) %>% slice(1:min(disp_num, nrow(GO)))
+  GO <- GO %>% group_by(module) %>% slice_head(n = disp_num)
   
   regulators <- Module_Table %>% select(module, regulators) %>%
     unnest(regulators)
@@ -733,6 +733,7 @@ prepModuleTable <- function(Module_Table, method, disp_num){
   }
   return(Module_Table)
 }
+
 
 if(file.exists('net_data.Rdata')){
   load('net_data.Rdata')
