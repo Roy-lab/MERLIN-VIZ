@@ -15,14 +15,16 @@ library(DT)
 #gene2genename_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_name_map_nancy.txt"
 #gene_desc_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_description_file.txt"
 #regulator_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_transcription_factors.tsv"
+#expression_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_expression_T_allLabels.txt" 
 
 
+title <- "Merlin-Viz"
 
 ################### Make R Data Files *Only need to run once###################
 makePostProcessDataStruct <- function (all_nodes_file, edge_list_file,
                           module2gene_file, go_file, module_file, 
                           regulator_enrich_file, go_enrich_file, 
-                          gene2genename_file, gene_desc_file, regulator_list_file)
+                          gene2genename_file, gene_desc_file, regulator_list_file, expression_file)
 {
 ###### Generate labeled Node Set
 genes2modules <- read_tsv(module2gene_file, c("feature", "module"))
@@ -61,7 +63,7 @@ regulators <- read_tsv(regulator_list_file, col_names = FALSE) %>%
 gene_map <- read_tsv(gene2genename_file, col_names = FALSE) %>%
   rename("feature" = "X1", "Common Name" = "X2")
 
-gene_desc <- read_tsv(gene_desc_file, col_names = FALSE) %>%
+gene_desc <- read_tsv(gene_desc_file, col_names = c("feature", "Description")) #%>%
   rename("feature" = "X1", "Description" = "X2")
   
 nodes <- read_tsv(file = all_nodes_file, col_names = "feature") %>% 
@@ -94,6 +96,13 @@ common_name = gene_map$`Common Name`
 feature_name = gene_map$feature
 genename_map <- tibble(common_name, feature_name)
 
+## load in Expression matrix 
+expression <- read_tsv(expression_file) %>% 
+  pivot_longer(cols = !Gene) %>% 
+  group_by(Gene) %>%
+  dplyr::summarize(expression = list(setNames(value, name)))
+
+
 ### Generate Edge Set
 routes <- read_tsv(edge_list_file, c("source", "target", "weight"))
 edges <- routes %>% 
@@ -110,12 +119,31 @@ edges <- edges %>%
 ### Make Tidy Graph Structure 
 Net <- tbl_graph(nodes= nodes, edges = edges)
 Net <- Net %>%
-  convert(to_undirected) %>%
+  #convert(to_undirected) %>%
   mutate(neighbors = map_local(order = 1, .f = function(neighborhood, node, ...) {
          as_tibble(neighborhood, active = 'nodes')$feature
       }))
 degree_v <-  Net %N>% as_tibble() %>% rowwise() %>% summarize(length(neighbors)) -1
 Net <- Net %>% mutate(degree = degree_v$`length(neighbors)`)
+
+Net <- left_join(Net, expression, by = c("feature" = "Gene"))
+
+## add correlation between expression vectors for all edges
+Net <- Net %E>% 
+  mutate(Correlation = map2( 
+    .N()$expression[from],
+    .N()$expression[to], 
+     ~ cor(.x, .y))[[1]]
+    ) 
+
+## Add regression weights betwee all edges.   
+Net <- Net %E>%
+  mutate(Reg_weight = map2(
+    .N()$expression[from], 
+    .N()$expression[to], 
+    ~ coef(lm(.y ~ .x))[[2]] ## just weight not intercept.
+  )) %>% 
+  mutate(Reg_weight = unlist(Reg_weight))
 
 ### Generate Module Structure 
 Module <- read_tsv(module_file, c("module", "gene_list"))  
@@ -387,8 +415,8 @@ gene_id <- Net %>%
   pull(id)
 
 gene_name <-  Net %>% 
-  filter(feature %in% gene_list) %>%
-  pull(feature)
+	filter(feature %in% gene_list) %>%
+	pull(feature)
 
 dist_matrix <- Net %N>%
   as_tibble() %>%
@@ -411,6 +439,7 @@ return(dist_matrix)
 
 
 buildSteinerTrees <- function(Net, gene_list){
+  Net <- Net %>% convert(to_undirected)
   dist_matrix <- getDistMatrix(Net, gene_list)
   gene_names <- colnames(dist_matrix)[2:length(dist_matrix)]
   dist2graph <- tibble(gene_names)
@@ -664,21 +693,22 @@ prepNodeTable <- function(Nodes_Table, disp_num){
       x <- str_pad(genename_map$common_name[which(x == genename_map$feature_name)], 12, side = "both")
     }else{
       x <- x
-    })), collapse = ' | ')) %>%
+    })), collapse = ' | ')) %>% 
+    select(!geneSuper) %>% 
+    select(!expression) %>%
     rename("Gene Name" = "feature") %>%
     mutate("Gene Name" = sprintf('<a href="https://fungidb.org/fungidb/app/record/gene/%s" target="_blank" rel="noopener noreferrer"> %s</a>', str_replace(`Gene Name`, '_nca', ''), `Gene Name`)) %>%
     mutate("id" = NULL) %>%
-    mutate("regulator" = NULL) %>%
-    mutate(geneSuper= NULL)
+    mutate("regulator" = NULL)
   
   Nodes_Table$module[which(Nodes_Table$module == -9999)] <- NA
   return(Nodes_Table)
 }
 
-prepModuleTable <- function(Module_Table, method, disp_num){
+prepModuleTable <- function(Module_Table, method, disp_num  = 5 ){
   GO <- Module_Table %>% select(module, GO) %>%
     unnest(GO)
-  GO <- GO %>% group_by(module) %>% slice(1:min(disp_num, nrow(GO)))
+  GO <- GO %>% group_by(module) %>% slice_head(n = disp_num)
   
   regulators <- Module_Table %>% select(module, regulators) %>%
     unnest(regulators)
@@ -733,6 +763,7 @@ prepModuleTable <- function(Module_Table, method, disp_num){
   }
   return(Module_Table)
 }
+
 
 if(file.exists('net_data.Rdata')){
   load('net_data.Rdata')
