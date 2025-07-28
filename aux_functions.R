@@ -15,6 +15,7 @@ library(DT)
 #gene2genename_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_name_map_nancy.txt"
 #gene_desc_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_description_file.txt"
 #regulator_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_transcription_factors.tsv"
+#expression_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_expression_T_allLabels.txt" 
 
 
 
@@ -22,7 +23,7 @@ library(DT)
 makePostProcessDataStruct <- function (all_nodes_file, edge_list_file,
                           module2gene_file, go_file, module_file, 
                           regulator_enrich_file, go_enrich_file, 
-                          gene2genename_file, gene_desc_file, regulator_list_file)
+                          gene2genename_file, gene_desc_file, regulator_list_file, expression_file)
 {
 ###### Generate labeled Node Set
 genes2modules <- read_tsv(module2gene_file, c("feature", "module"))
@@ -61,7 +62,7 @@ regulators <- read_tsv(regulator_list_file, col_names = FALSE) %>%
 gene_map <- read_tsv(gene2genename_file, col_names = FALSE) %>%
   rename("feature" = "X1", "Common Name" = "X2")
 
-gene_desc <- read_tsv(gene_desc_file, col_names = FALSE) %>%
+gene_desc <- read_tsv(gene_desc_file, col_names = c("feature", "Description")) #%>%
   rename("feature" = "X1", "Description" = "X2")
   
 nodes <- read_tsv(file = all_nodes_file, col_names = "feature") %>% 
@@ -94,6 +95,13 @@ common_name = gene_map$`Common Name`
 feature_name = gene_map$feature
 genename_map <- tibble(common_name, feature_name)
 
+## load in Expression matrix 
+expression <- read_tsv(expression_file) %>% 
+  pivot_longer(cols = !Gene) %>% 
+  group_by(Gene) %>%
+  dplyr::summarize(expression = list(setNames(value, name)))
+
+
 ### Generate Edge Set
 routes <- read_tsv(edge_list_file, c("source", "target", "weight"))
 edges <- routes %>% 
@@ -116,6 +124,25 @@ Net <- Net %>%
       }))
 degree_v <-  Net %N>% as_tibble() %>% rowwise() %>% summarize(length(neighbors)) -1
 Net <- Net %>% mutate(degree = degree_v$`length(neighbors)`)
+
+Net <- left_join(Net, expression, by = c("feature" = "Gene"))
+
+## add correlation between expression vectors for all edges
+Net <- Net %E>% 
+  mutate(Correlation = map2( 
+    .N()$expression[from],
+    .N()$expression[to], 
+     ~ cor(.x, .y))[[1]]
+    ) 
+
+## Add regression weights betwee all edges.   
+Net <- Net %E>%
+  mutate(Reg_weight = map2(
+    .N()$expression[from], 
+    .N()$expression[to], 
+    ~ coef(lm(.y ~ .x))[[2]] ## just weight not intercept.
+  )) %>% 
+  mutate(Reg_weight = unlist(Reg_weight))
 
 ### Generate Module Structure 
 Module <- read_tsv(module_file, c("module", "gene_list"))  
@@ -665,7 +692,9 @@ prepNodeTable <- function(Nodes_Table, disp_num){
       x <- str_pad(genename_map$common_name[which(x == genename_map$feature_name)], 12, side = "both")
     }else{
       x <- x
-    })), collapse = ' | ')) %>%
+    })), collapse = ' | ')) %>% 
+    select(!geneSuper) %>% 
+    select(!expression) %>%
     rename("Gene Name" = "feature") %>%
     mutate("Gene Name" = sprintf('<a href="https://fungidb.org/fungidb/app/record/gene/%s" target="_blank" rel="noopener noreferrer"> %s</a>', str_replace(`Gene Name`, '_nca', ''), `Gene Name`)) %>%
     mutate("id" = NULL) %>%

@@ -16,32 +16,39 @@ library(shinyBS)#CC: Widgets package
 library(htmltools)
 library(bsplus)#CC: For tooltip
 library(shinyjs)#CC: For tooltip
+library(patchwork)
 
 
 ## Load in aux functions and data
-source('aux_functions.R') #CC: I added my path here to make it work
-source('printerFunction.R')#CC: I added my path here to make it work
+source('aux_functions.R') 
+source('printerFunction.R')
+source('heatmap_printer.R')
 
 
 #MyClickScript <- 'Shiny.setInputValue("save_module", module_name)'
 
 all_gene_names <- unique(c(genes, genename_map$common_name))
-palettes <- tibble(rownames_to_column(brewer.pal.info, var = 'pal'))
+palettes_nodes<- tibble(rownames_to_column(brewer.pal.info, var = 'pal')) %>% 
+  filter(category == "qual")
+palettes_edges <- tibble(rownames_to_column(brewer.pal.info, var = 'pal')) %>% 
+  filter(category == "div")
 igraph_layout <- c('Fruchterman-Reingold'='nicely', 'Davidson-Harel'='dh', 'Kamada-Kawai'='kk', 'Large graph layout'= 'lgl') #'Force directed' = 'drl')
 
 ################################# ui ###########################################
 ui <- navbarPage("GRAsp",
+                 id = 'navbar',
                  theme = shinytheme("flatly"), #CC: Set this as the main theme
                  
                  tabPanel("Visualize",
                           #shinythemes::themeSelector(), #CC: this allows you to cycle through different themes when the app is running
+                          #####  Gene selection Options ##############################
                           fluidRow(
                             column(2,
                                    pickerInput(inputId = "method", h4("Search Method"), #CC: I set the default to list
                                                c('Gene List' = 'list', Modules = "module", "Node Diffusion" = "diff",'GO-Term' = "go_term"),
                                                selected = "list"
                                    ),
-                                   
+                                   #### Module Selection ###################
                                    conditionalPanel(
                                      condition = "input.method == 'module'",
                                      pickerInput(
@@ -50,11 +57,13 @@ ui <- navbarPage("GRAsp",
                                        choices = c("", unlist(sort(module_ids)))
                                      )
                                    ),
+                                   #### GO Selection  ###################
                                    conditionalPanel(
                                      condition = "input.method == 'go_term'",
                                      pickerInput(inputId = "go_term", label = "GO terms", choices = c("", unlist(sort(enriched_go_terms))))
                                    ),
                                    
+                                   ### Gene List Selection ###############
                                    conditionalPanel(
                                      condition = "input.method == 'list'",
                                      tags$div(
@@ -74,7 +83,7 @@ ui <- navbarPage("GRAsp",
                                          )
                                        )
                                      ),
-                                     selectInput(inputId = "gl", label = NULL, choices = NULL, multiple = TRUE, selectize = TRUE),
+                                     selectInput(inputId = "gl", label = NULL, choices = NULL, multiple = TRUE, selectize = TRUE, selected = c("srbA")),
                                      
                                      tags$div(
                                        style = "display: flex; align-items: center;",
@@ -96,7 +105,7 @@ ui <- navbarPage("GRAsp",
                                      fileInput(inputId = "cell_list_file", "")
                                    ),
                                    
-                                   
+                                   ############# Gene List Selection  2 ###########################
                                    conditionalPanel(
                                      condition = "input.method == 'list'",
                                      checkboxGroupInput(
@@ -118,10 +127,10 @@ ui <- navbarPage("GRAsp",
                                            )
                                          )
                                        ),
-                                       choices = c("Show Neighbors" = "neigh", "Include Module members" = "mod", "Create Steiner Tree" = "stein") #CC: Changed to more descriptive titles
-                                     )
+                                       choices = c("Show Neighbors" = "neigh", "Include Module Members" = "mod", "Create Steiner Tree" = "stein"), #CC: Changed to more descriptive titles
+                                       selected = c("mod")
+                                      )
                                    ),
-                                   
                                    #This is required to align the tooltip and the download button in the Diffusion Score File section
                                    tags$style(HTML("
    /* Custom CSS for the 'Example' button */
@@ -141,7 +150,7 @@ ui <- navbarPage("GRAsp",
 
   ")),
                                    
-                                   
+                                   ####### Diffusion Selection ##################
                                    conditionalPanel(
                                      condition = "input.method == 'diff'",
                                      fluidRow(
@@ -254,23 +263,32 @@ ui <- navbarPage("GRAsp",
                                      
                                      actionButton(inputId = "refresh_diff", "Refresh")
                                      
-                                   ) 
-                                   
+                                   ),
+                                   # br(),
+                                   # actionButton("contact_button", "Contact us",   
+                                   # tags$script(HTML("
+                                   #      // JavaScript code to open a link
+                                   #         document.getElementById('go_to_page').onclick = function() {
+                                   #           window.open('https://www.example.com', '_blank');
+                                   #          }")))
                             ),
-                            
+                            #### Visualization Block ########
                             column(10,
                                    tabsetPanel(id = "displayType", type = "tabs",
-                                               tabPanel("Network Plot", plotOutput("print_net", click = 'plot_click', height = '750px')), #CC: Changed to more descriptive titles
+                                               tabPanel("Network Plot", plotOutput("print_net", click = 'plot_click', height = '1000px')), #CC: Changed to more descriptive titles
+                                               tabPanel("Expression Heatmaps", plotOutput("expression_heatmap", height = '1000px')),
                                                tabPanel("Gene Table", DT::dataTableOutput("nodes_table")),
                                                tabPanel("Module Table", DT::dataTableOutput("module_table"))
+                                               
                                    )
                             )
                           ),
                           fluidRow(
+                            ############# Network Plot support options  ########################
                             conditionalPanel(
                               condition ="input.displayType == 'Network Plot'",
-                              column(3),
-                              column(3,
+                              column(2),
+                              column(2,
                                      selectInput(inputId = 'print_layout', choices = igraph_layout, multiple = FALSE, 
                                      	    label = tags$div(
                                      	    	style = "display: flex; align-items: center;",
@@ -379,9 +397,9 @@ ui <- navbarPage("GRAsp",
                                        	    	)))
                                      )
                               ),
-                              column(3,
+                              column(2,
                                      radioButtons(inputId = "print_group_by",
-                                                  choices = list ("Module" = 'module', "Regulator" = "regulator"), selected =  'module', 
+                                                  choices = list ("Module" = 'module', "Regulator" = "regulator", "Gene Name" = "geneSuper"), selected =  'module', 
                                      	     label = tags$div(
                                      	     	style = "display: flex; align-items: center;",
                                      	     	tags$h4("Node color by"),
@@ -389,7 +407,7 @@ ui <- navbarPage("GRAsp",
                                      	     		style = "margin-left: 1px;", 
                                      	     		bsButton("color_by_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
                                      	     		bsPopover("color_by_info", "Additional Info",
-                                     	     			  "Node coloring method. If set to module, nodes are colored by module assigment. Grey nodes correspond to genes not assigned to a module. If set to regulator, regulators are colored red and targets are colored blue.",
+                                     	     			  "Node coloring method. If set to module, nodes are colored by module assigment. Grey nodes correspond to genes not assigned to a module. If set to regulator, regulators are colored red and targets are colored blue. If set to Gene Name, color nodes with similar common gene name as the same color.",
                                      	     			  placement = "right",
                                      	     			  options = list(
                                      	     			  	container = "body",
@@ -398,7 +416,7 @@ ui <- navbarPage("GRAsp",
                                      	     			  )
                                      	     		)
                                      	     	))), #CC: Removed gene family labeling as it was confusing to users
-                                     selectInput(inputId = 'print_node_pal', choices = palettes$pal, multiple = FALSE, selected = 'Pastel1', 
+                                     selectInput(inputId = 'print_node_pal', choices = palettes_nodes$pal, multiple = FALSE, selected = 'Pastel1', 
                                      	    label = tags$div(
                                      	    	style = "display: flex; align-items: center;",
                                      	    	tags$h4("Node color palette"),
@@ -449,8 +467,64 @@ ui <- navbarPage("GRAsp",
                                      	    			  )
                                      	    		)
                                      	    	)))
+                                     
                               ),
-                              column(3,
+                              column(2,
+                                     radioButtons(inputId = "edge_color_by", 
+                                                  choices = list("Correlation" = "Correlation", "Regression Weight"= "Reg_weight"), label = tags$div(
+                                                    style = "display: flex; align-items: center;",
+                                                    tags$h4("Edge color by"),
+                                                    tags$div(
+                                                      style = "margin-left: 1px;", 
+                                                      bsButton("edge_color_by_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                      bsPopover("edge_color_by_info", "Additional Info",
+                                                                "Edge coloring method. Edges will be colored by either regression weight or correlation betweeen linked genes.",
+                                                                placement = "right",
+                                                                options = list(
+                                                                  container = "body",
+                                                                  html = TRUE,
+                                                                  template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                                )
+                                                      )
+                                                    ))),
+                                     
+                                     conditionalPanel(
+                                       condition = "input.edge_color_by == 'Reg_weight'",
+                                       sliderInput("edge_color_range", label = tags$div(
+                                         style = "display: flex; align-items: center;",
+                                         tags$h4("Edge color range"),
+                                         tags$div(
+                                           style = "margin-left: 1px;", 
+                                           bsButton("edge_color_range_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                           bsPopover("edge_color_range_info", "Additional Info",
+                                                     "Set the minimum and maximum of the regression weight color scale.",
+                                                     placement = "right",
+                                                     options = list(
+                                                       container = "body",
+                                                       html = TRUE,
+                                                       template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                     )
+                                           ))), min = -10, max = 10, value = c(-5,5), step = 0.1),
+                                     ),
+                                     selectInput(inputId = 'edge_color_palette', choices = palettes_edges$pal, multiple = FALSE, selected = 'RdBu', 
+                                                 label = tags$div(
+                                                   style = "display: flex; align-items: center;",
+                                                   tags$h4("Edge color palette"),
+                                                   tags$div(
+                                                     style = "margin-left: 1px;", 
+                                                     bsButton("edge_pal_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                     bsPopover("edge_pal_info", "Additional Info",
+                                                               "Palette options to color edges in display field. Options are provided by the color brewer package.",
+                                                               placement = "right",
+                                                               options = list(
+                                                                 container = "body",
+                                                                 html = TRUE,
+                                                                 template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                               )
+                                                     )
+                                                   ))),
+                                     ),
+                              column(2,
                                      sliderInput(inputId = 'print_expand_x', value = 2, step = 0.1, min = 0, max = 25, 
                                      	    	    label = tags$div(
                                      	    	    	style = "display: flex; align-items: center;",
@@ -484,7 +558,22 @@ ui <- navbarPage("GRAsp",
                                      	    			  	template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
                                      	    			  )
                                      	    		)
-                                     	    	))),
+                                     	    		))),
+                                     	    		sliderInput("legend_font_size", label = tags$div(
+                                     	    		  style = "display: flex; align-items: center;",
+                                     	    		  tags$h4("Legend font size"),
+                                     	    		  tags$div(
+                                     	    		    style = "margin-left: 1px;", 
+                                     	    		    bsButton("legend_font_size_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                     	    		    bsPopover("legend_font_size_info", "Additional Info",
+                                     	    		              "Set the legend font size of the figure. Note if too small, the font will not display.",
+                                     	    		              placement = "right",
+                                     	    		              options = list(
+                                     	    		                container = "body",
+                                     	    		                html = TRUE,
+                                     	    		                template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                     	    		              )
+                                     	    		    ))), min = 0, max = 25, value = 18, step = 1),
                                      sliderInput(inputId = 'print_image_height', value = 8, min = 1, max = 25, 
                                      	    label = tags$div(
                                      	    	style = "display: flex; align-items: center;",
@@ -539,32 +628,266 @@ ui <- navbarPage("GRAsp",
                                      	  ),
                                      downloadButton("saveFig", "Save figure")
                               )
+                            ),
+                            ############# Heatmap Suport option Tab  ########################
+                            conditionalPanel(
+                              condition ="input.displayType == 'Expression Heatmaps'",
+                              column(2),
+                              column(2,
+                                     radioButtons("common_name_heatmap",
+                                                  choices = list("Common" = 1, "Systematic" = 2),
+                                                  label = tags$div(
+                                                    style = "display: flex; align-items: center;",
+                                                    tags$h4("Name format"),
+                                                    tags$div(
+                                                      style = "margin-left: 1px;", 
+                                                      bsButton("NFInfo2", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                      bsPopover("NFInfo2", "Additional Info",
+                                                                "Name format for display. Select common names to use first instance of name from fungiDB database. Systematic names are in AFUA_#G##### format.",
+                                                                placement = "right",
+                                                                options = list(
+                                                                  container = "body",
+                                                                  html = TRUE,
+                                                                  template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                                )
+                                                      )
+                                                    )))
+                              ),
+                              column(2,
+                                     selectInput(inputId = 'tfa_palette_heatmap', choices = palettes_edges$pal, multiple = FALSE, selected = 'PiYG', 
+                                                 label = tags$div(
+                                                   style = "display: flex; align-items: center;",
+                                                   tags$h4("TFA color palette"),
+                                                   tags$div(
+                                                     style = "margin-left: 1px;", 
+                                                     bsButton("expr_pal_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                     bsPopover("expr_pal_info", "Additional Info",
+                                                               "Palette to color transcription factor activity profile heatmaps.",
+                                                               placement = "right",
+                                                               options = list(
+                                                                 container = "body",
+                                                                 html = TRUE,
+                                                                 template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                               )
+                                                     )
+                                                   ))),
+                                     sliderInput(inputId = 'tfa_range_heatmap', value = c(-2,2), min = -10, max = 10, 
+                                                 label = tags$div(
+                                                   style = "display: flex; align-items: center;",
+                                                   tags$h4("TFA range"),
+                                                   tags$div(
+                                                     style = "margin-left: 1px;", 
+                                                     bsButton("tfa_range_heatmap_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                     bsPopover("tfa_range_heatmap_info", "Additional Info",
+                                                               "Range to color TFA profile heatmap",
+                                                               placement = "right",
+                                                               options = list(
+                                                                 container = "body",
+                                                                 html = TRUE,
+                                                                 template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                               )
+                                                     )
+                                                   ))),
+                                     selectInput(inputId = 'expression_palette_heatmap', choices = palettes_edges$pal, multiple = FALSE, selected = 'RdBu', 
+                                                 label = tags$div(
+                                                   style = "display: flex; align-items: center;",
+                                                   tags$h4("Expression color palette"),
+                                                   tags$div(
+                                                     style = "margin-left: 1px;", 
+                                                     bsButton("expression_palette_heatmap_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                     bsPopover("expression_palette_heatmap_info", "Additional Info",
+                                                               "Palette options to color expression heatmap",
+                                                               placement = "right",
+                                                               options = list(
+                                                                 container = "body",
+                                                                 html = TRUE,
+                                                                 template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                               )
+                                                     )
+                                                   ))),
+                                     sliderInput(inputId = 'expression_range_heatmap', value = c(-2,2), min = -10, max = 10, 
+                                                 label = tags$div(
+                                                   style = "display: flex; align-items: center;",
+                                                   tags$h4("Expression range"),
+                                                   tags$div(
+                                                     style = "margin-left: 1px;", 
+                                                     bsButton("expression_range_heatmap_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                     bsPopover("expression_range_heatmap_info", "Additional Info",
+                                                               "Range to color expression heatmap",
+                                                               placement = "right",
+                                                               options = list(
+                                                                 container = "body",
+                                                                 html = TRUE,
+                                                                 template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                               )
+                                                     )
+                                                   )))
+                                     
+                              ),
+                              column(2,
+                                     radioButtons(inputId = "edge_color_by_heatmap", 
+                                                  choices = list("Correlation" = "Correlation", "Regression Weight"= "Reg_weight"), label = tags$div(
+                                                    style = "display: flex; align-items: center;",
+                                                    tags$h4("Edge color by"),
+                                                    tags$div(
+                                                      style = "margin-left: 1px;", 
+                                                      bsButton("edge_color_by_info2", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                      bsPopover("edge_color_by_info2", "Additional Info",
+                                                                "Edge coloring method. Edges will be colored by either regression weight or correlation betweeen linked genes.",
+                                                                placement = "right",
+                                                                options = list(
+                                                                  container = "body",
+                                                                  html = TRUE,
+                                                                  template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                                )
+                                                      )
+                                                    ))),
+                                     conditionalPanel(
+                                       condition = "input.edge_color_by_heatmap == 'Reg_weight'",
+                                       sliderInput("edge_color_range_heatmap", label = tags$div(
+                                         style = "display: flex; align-items: center;",
+                                         tags$h4("Edge color range"),
+                                         tags$div(
+                                           style = "margin-left: 1px;", 
+                                           bsButton("edge_color_range_info2", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                           bsPopover("edge_color_range_info2", "Additional Info",
+                                                     "Set the minimum and maximum of the regression weight color scale.",
+                                                     placement = "right",
+                                                     options = list(
+                                                       container = "body",
+                                                       html = TRUE,
+                                                       template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                     )
+                                           ))), min = -10, max = 10, value = c(-5,5), step = 0.1),
+                                     ),
+                                     selectInput(inputId = 'edge_color_palette_heatmap', choices = palettes_edges$pal, multiple = FALSE, selected = 'RdBu', 
+                                                 label = tags$div(
+                                                   style = "display: flex; align-items: center;",
+                                                   tags$h4("Edge color palette"),
+                                                   tags$div(
+                                                     style = "margin-left: 1px;", 
+                                                     bsButton("edge_pal_info2", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                     bsPopover("edge_pal_info2", "Additional Info",
+                                                               "Palette options to color edges in display field. Options are provided by the color brewer package.",
+                                                               placement = "right",
+                                                               options = list(
+                                                                 container = "body",
+                                                                 html = TRUE,
+                                                                 template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                               )
+                                                     )
+                                                   )))
+                                    
+                              ),
+                              column(2,
+                                     sliderInput("Font_size_heatmap", label = tags$div(
+                                       style = "display: flex; align-items: center;",
+                                       tags$h4("Figure font size"),
+                                       tags$div(
+                                         style = "margin-left: 1px;", 
+                                         bsButton("legend_font_size_info2", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                         bsPopover("legend_font_size_info2", "Additional Info",
+                                                   "Set the legendfont size of the figure. Note if too small, the font will not display.",
+                                                   placement = "right",
+                                                   options = list(
+                                                     container = "body",
+                                                     html = TRUE,
+                                                     template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                   )
+                                         ))), min = 0, max = 25, value = 18, step = 1),
+                                     sliderInput(inputId = 'print_image_height_heatmap', value = 8, min = 1, max = 25, 
+                                                 label = tags$div(
+                                                   style = "display: flex; align-items: center;",
+                                                   tags$h4("Image height (in)"),
+                                                   tags$div(
+                                                     style = "margin-left: 1px;", 
+                                                     bsButton("image_height_info2", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                     bsPopover("image_height_info2", "Additional Info",
+                                                               "Set height (in inches) of image when saved. Save by hitting the save figure button.",
+                                                               placement = "right",
+                                                               options = list(
+                                                                 container = "body",
+                                                                 html = TRUE,
+                                                                 template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                               )
+                                                     )
+                                                   ))),
+                                     sliderInput(inputId = 'print_image_width_heatmap', value = 8, min = 1, max = 25, 
+                                                 label = tags$div(
+                                                   style = "display: flex; align-items: center;",
+                                                   tags$h4('Image width (in)'),
+                                                   tags$div(
+                                                     style = "margin-left: 1px;", 
+                                                     bsButton("image_width_info2", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                     bsPopover("image_width_info2", "Additional Info",
+                                                               "Set width (in inches) of image when saved. Save by hitting the save figure button.",
+                                                               placement = "right",
+                                                               options = list(
+                                                                 container = "body",
+                                                                 html = TRUE,
+                                                                 template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                               )
+                                                     )
+                                                   ))),
+                                     textInput("print_file_name_heatmap", value = "file_name", 
+                                               label = tags$div(
+                                                 style = "display: flex; align-items: center;",
+                                                 tags$h4('File name'),
+                                                 tags$div(
+                                                   style = "margin-left: 1px;", 
+                                                   bsButton("figure_name_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                                                   bsPopover("figure_name_info", "Additional Info",
+                                                             "Set custom figure name for when figure is saved.",
+                                                             placement = "right",
+                                                             options = list(
+                                                               container = "body",
+                                                               html = TRUE,
+                                                               template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                                                             )
+                                                   )
+                                                 ))
+                                     ),
+                                     downloadButton("saveFig2", "Save figure")
+                              )
                             )
                           )
                  ),
                  
+                 ######### 
+                 
                  tabPanel("About",
                           fluidPage(htmltools::tags$iframe(src = "Help.html", width = '100%', height = 1000, style = "border:none;"))
                  ),
-                 
-                 #tabPanel("Data Used"),
-                
-                 
-                 
                  tabPanel("Contact", #CC: connected a googleforms that allows users to ask questions or give suggestions. Not sure if there was a better way.
-                     tags$iframe(src = 'https://forms.gle/Xf9S35TatoW3Vmgx9',
-                                  width = '100%',
-                                   height = 1000,
-                                    frameborder = 0
-                         )
-                 )
+                          tags$iframe(
+                            src="https://docs.google.com/forms/d/e/1FAIpQLScwQKwts37i7ykKs1-wlpcE-fPOVVyjUYzLBXTdE93vI6zPLA/viewform?embedded=true",
+                            width = "100%",
+                            height = "600",
+                            frameborder = "0",
+                            marginheight = "0",
+                            marginwidth = "0",
+                            scrolling = "auto"
+                        )),
                  
+                # JavaScript to switch tabs
+                tags$script(HTML("
+                Shiny.addCustomMessageHandler('switchTab', function(tabName) {
+                var tabLink = $('a:contains(\"' + tabName + '\")');
+                if (tabLink.length) tabLink.click();
+                });
+                "))
                  
+                        
 )
 ##################### Server Functions ########################################
 server <- function(input, output, session) {
   updateSelectizeInput(session, 'gene', choices = all_gene_names, server = TRUE)
-  updateSelectizeInput(session, 'gl', choices = all_gene_names, server = TRUE)
+  updateSelectizeInput(session, 'gl', choices = all_gene_names, selected = "srbA", server = TRUE)
+ 
+  
+  
+  
+  
   #### Variables ################
   node_name_info <- reactiveVal(value = NA)  
   module_id_info <- reactiveVal(value = NA)
@@ -577,17 +900,23 @@ server <- function(input, output, session) {
   diff_nodes <- reactiveVal()
   render_diff <- reactiveVal(FALSE)
   gg_out_plot <- reactiveVal(NULL)
+  gg_out_heatmap <- reactiveVal(NULL)
   disp_nodes <- reactiveVal(NULL)
   
   lambda <- reactiveVal(1)
   gene_list <- reactiveVal(NULL)
   
   
+  ##Contact us action item 
+  #bserveEvent(input$contact_button, {
+  #  js$windowOpen("https://forms.gle/Xf9S35TatoW3Vmgx9", "_blank")
+  #})
+  
   ##### File IO ################
   file_path <- reactive({
     file <- input$cell_list_file
-    print(file)
-    req(file)
+    #print(file)
+    #req(file)
     file$datapath 
   })
   
@@ -599,9 +928,9 @@ server <- function(input, output, session) {
   
   observeEvent(input$refresh_diff, {
     percentile(input$percentile)
-    print(percentile())
+    #print(percentile())
     lambda(input$kernel)
-    print(lambda())
+    #print(lambda())
   })
   
   observeEvent(input$min_neigh, {
@@ -615,19 +944,18 @@ server <- function(input, output, session) {
   })
   
   observeEvent(render_diff(), {
-    print("IN Func")
     nodes <- diff_nodes()
     if(!is.null(nodes$score)){
       Net <- left_join(Net, nodes)
       sub_net(diffScoreSubgraph(Net, min_neigh(), disp_regs()))
     }
     render_diff(FALSE)
-    print(render_diff())
+    #print(render_diff())
   })
   
   observeEvent(input$gl,{
-    print(length(Net %N>% pull(feature)))
-    print(input$gl)
+    #print(length(Net %N>% pull(feature)))
+    #print(input$gl)
     if(length(input$gl) == length(Net %N>% pull(feature)) | length(input$gl) == 0){
       gene_list(NULL)
     }
@@ -658,7 +986,7 @@ server <- function(input, output, session) {
       sub_net(tbl_graph())	
     }else{
       go_term <- input$go_term
-      print(go_term)
+      #print(go_term)
       subNet <- goSubgraph(Net, Module, enrich_2_module, go_term)
       Nodes <- subNet %N>% as_tibble()
       regulators <- subNet %N>% as_tibble() %>%  filter(regulator == 'scr') 
@@ -672,17 +1000,19 @@ server <- function(input, output, session) {
   })
   
   observeEvent(input$module_id,{
-    print(input$module_id)
+    #print(input$module_id)
     if(input$module_id  == ""){
       sub_net(tbl_graph())
     }else{
       module <- input$module_id
-      print(module)
+      #print(module)
       module_id_info(input$module_id)
       node_name_info(NA)
       subNet <- moduleSubgraph(Net, Module, module)
       Nodes <- subNet %N>% as_tibble()
       regulators <- subNet %N>% as_tibble() %>%  filter(regulator == 'scr') 
+      
+      
       if(input$common_name == 1){
         updateSelectizeInput(session, 'print_disp_names', choices = Nodes %>% pull(`Common Name`),  selected = regulators %>% pull(`Common Name`), server = TRUE)
       }else{
@@ -724,7 +1054,7 @@ server <- function(input, output, session) {
       Net <- computeDiffusionScore(Net, score_list, k1000_sparse)
     }
     diff_nodes(Net %N>% as_tibble())
-    print("HERE:::")
+    #print("HERE:::")
     render_diff(TRUE)
   })
   
@@ -734,11 +1064,15 @@ server <- function(input, output, session) {
   })
   
   observeEvent(gene_list(), {
-    if(length(gene_list()> 0 )){
+    if(length(gene_list() > 0 )){
       subNet <- geneListSubgraph(Net, Module, gene_list(), input$search_additional)
       Nodes <- subNet %N>% as_tibble()
       Nodes_gene_list <- Nodes %>% filter(feature %in% gene_list()) 
-      if(input$common_name == 1){
+      
+      if(init){
+        updateSelectizeInput(session, 'print_disp_names', choices = Nodes %>% pull(`Common Name`), selected = disp_names, server = TRUE)
+        init <<- FALSE
+      }else if(input$common_name == 1){
         updateSelectizeInput(session, 'print_disp_names', choices = Nodes %>% pull(`Common Name`),  selected = Nodes_gene_list %>% pull(`Common Name`), server = TRUE)
       }else{
         updateSelectizeInput(session, 'print_disp_names', choices = Nodes %>% pull(feature), selected = Nodes_gene_list %>% pull(feature), server = TRUE)
@@ -811,7 +1145,7 @@ server <- function(input, output, session) {
     if(isempty(S %N>% as_tibble())){
     }else{
       S_tables <- graph2NodeEdgeTables(S)
-      S_nodes <- prepNodeTable(S_tables[[1]], 1) #CC: Set the # of GO-terms to 1, and removed the ability pick from the UI. To make it simpler
+        S_nodes <- prepNodeTable(S_tables[[1]], 1) #CC: Set the # of GO-terms to 1, and removed the ability pick from the UI. To make it simpler
       DT::datatable(S_nodes, escape = FALSE, 
                     extensions = 'Buttons', options = list(
                       dom = 'Blfrtip',
@@ -886,7 +1220,7 @@ server <- function(input, output, session) {
         max_colors <- palettes$maxcolors[which(palettes$pal == "Pastel1")]
         pal <- brewer.pal(max(3, min(max_colors, num_mods)), "Pastel1")
         if(max_colors < num_mods){
-          pal <- extend_pallette <- colorRampPalette(pal)(num_mods)
+          pal <- extend_palette <- colorRampPalette(pal)(num_mods)
         }
         colorScale = JS(paste0('color=d3.scaleOrdinal([ `#BEBEBE`, ', paste(sprintf('`%s`', pal), collapse = ', '), ']), color.domain([-9999])'))
       }else if(input$group_by == "geneSuper"){
@@ -894,7 +1228,7 @@ server <- function(input, output, session) {
         max_colors <- palettes$maxcolors[which(palettes$pal == "Pastel1")]
         pal <- brewer.pal(max(3, min(max_colors, num_supers)), "Pastel1")
         if(max_colors < num_supers){
-          pal <- extend_pallette <- colorRampPalette(pal)(num_supers)
+          pal <- extend_palette <- colorRampPalette(pal)(num_supers)
         }
         colorScale = JS(paste0('color=d3.scaleOrdinal([`#BEBEBE`, ', paste(sprintf('`%s`', pal), collapse = ', '),"]), color.domain(['Unlabeled'])"))
       }
@@ -964,20 +1298,47 @@ server <- function(input, output, session) {
       }
       subNet <- subNet %N>% mutate(module = as.character(module)) %>% mutate(module = str_replace(module, '-9999', 'Unlabeled'))
       
-      edge_color_by <- ifelse('stein' %in% input$search_additional, 'is_steiner', NA)
+      #edge_color_by <- ifelse('stein' %in% input$search_additional, 'is_steiner', NA)
       node_size_by <- ifelse(input$method =='diff', 'score', NA) 
-      
       
       gg_out_plot(
         makeSubNetGraph(subNet, names_in_nodes = input$print_name_bool, node_color_by = input$print_group_by, 
-                        edge_color_by = edge_color_by, node_color_palette = input$print_node_pal, 
+                        edge_color_by = input$edge_color_by, edge_color_palette = input$edge_color_palette, 
+                        node_color_palette = input$print_node_pal, 
                         node_size_by = node_size_by, max_node_size = input$print_max_node_size, 
                         layout = input$print_layout, focus_nodes = list(), 
                         font_size = input$print_font_size, 
-                        nudge_y = input$print_nudge_y, text_angle = input$print_text_angle, show_legend =input$print_show_legend,
-                        expand_x = input$print_expand_x, expand_y = input$print_expand_y)
+                        nudge_y = input$print_nudge_y, text_angle = input$print_text_angle, show_legend = TRUE,
+                        expand_x = input$print_expand_x, expand_y = input$print_expand_y, color_scale_limits = input$edge_color_range, legend_font_size = input$legend_font_size)
       )
       gg_out_plot()
+    }
+  })
+  
+  
+  output$expression_heatmap <- renderPlot({
+    subNet <- sub_net() 
+    if(is_empty(subNet)){
+      gg<- ggplot() + 
+        theme(panel.background = element_rect(fill="white", colour = "white")) +
+        geom_text(label = "no subgraph selected.")
+    }else{
+      print(input$tfa_color_range_heatmap)
+      gg_out_heatmap(
+        makeSubgraphHeatmap(subNet,
+          display_name = input$common_name_heatmap,
+          edge_color_by = input$edge_color_by_heatmap, 
+          edge_color_palette = input$edge_color_palette_heatmap, 
+          font_size = input$print_font_size,
+          tfa_color_palette = input$tfa_palette_heatmap, 
+          expression_color_palette = input$expression_palette_heatmap,
+          scale_edge_color  = input$edge_color_range_heatmap, 
+          scale_expression_colors = input$expression_range_heatmap, 
+          scale_tfa_colors = input$tfa_range_heatmap, 
+          figure_font_size = input$Font_size_heatmap ###_____TTEMPT######
+        )
+      )
+      gg_out_heatmap()
     }
   })
   
@@ -989,6 +1350,13 @@ server <- function(input, output, session) {
     filename = function(){ifelse(str_length(input$print_file_name) > 0, paste(input$print_file_name, '.png', sep = ''), 'file.png')},
     content = function(file){
       ggsave(file,gg_out_plot(), width = input$print_image_width, height = input$print_image_height,units = 'in')
+    })
+  
+  
+  output$saveFig2 <- downloadHandler(
+    filename = function(){ifelse(str_length(input$print_file_name) > 0, paste(input$print_file_name, '.png', sep = ''), 'file.png')},
+    content = function(file){
+      ggsave(file, gg_out_heatmap(), width = input$print_image_width_heatmap, height = input$print_image_height_heatmap,units = 'in')
     })
   
   
@@ -1068,6 +1436,11 @@ server <- function(input, output, session) {
     }
   )
   
+  ### Initialize 
+  disp_names <- c('cyp51A', 'erG25B', 'hyd1', 'srbA', 'srbB', 'erG3', 'erG25', 'fhpA', 'erG1', 
+                       'hem13', 'niiA', 'AFUA_5G06120_nca', 'AFUA_3G12190', 'bna4', 'srb5', 'hem14', 'exG4', 
+                       'erG3A', 'pre4', 'AFUA_7G04740', 'AFUA_6G02180')
+  init <<- TRUE
   ############### observe Events ##########################################
   #observeEvent(input$node_name, {
   #  if(any(input$node_name == genename_map$common_name)){
@@ -1096,8 +1469,29 @@ server <- function(input, output, session) {
   #  text <- printModuleInfo(Module, module_id_info(), gl, genes)
   #  HTML(text)
   #})
-}
+
 ########################################################################
+
+
+showModal(
+  modalDialog(
+    title = "Welcome to GRAsp",
+    "If this is your first time using GRAsp, please read the documentation in the About tab.",
+    footer = tagList(
+      actionButton("go_to_about", "Go to About", class = "btn-primary"),
+      modalButton("Close")  # This adds a close button
+    ),
+    easyClose = TRUE
+  )
+)
+
+# Observe button click and switch to About tab
+observeEvent(input$go_to_about, {
+  updateNavbarPage(session = getDefaultReactiveDomain(), "navbar", selected = "About")  # Switch tab
+  removeModal()  # Close the popup
+})
+
+}
 shinyApp(ui, server)
 
 

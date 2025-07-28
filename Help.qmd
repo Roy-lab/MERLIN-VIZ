@@ -2,14 +2,16 @@
 title: "GRAsp"
 subtitle: "Gene Regulation of *Aspergillus Fumigatus*"
 author: "Roy Lab"
-date: "Version 3.0"
+date: "May 23, 2025"
 fontsize: 12pt
-output: 
-  html_document:
-    #theme: flatly
-    toc: yes
-    toc_float:
-      collapsed: true
+
+format:
+  html:
+    bootstrap-version: 3
+    toc: true
+    toc-depth: 2
+    toc-location: right
+    toc-expand: false
 ---
 
 ```{r setup, include=FALSE}
