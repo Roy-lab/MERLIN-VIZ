@@ -13,7 +13,8 @@ makeSubNetGraph <- function(subNet,
                             edge_width = 1, 
                             layout = 'dh', focus_nodes = list(), 
                             font_size = 18, nudge_y = 0, text_angle  = 0, show_legend = TRUE, direction = 1,
-                            expand_x = 0, expand_y = 0, font_color = '#ffffff', unlab_color = '#000000', 
+                            expand_x = 0, expand_y = 0, font_color = '#ffffff', unlab_color = '#000000',
+                            arrow_size = 0.5, 
                             color_scale_limits = c(-5,5) , legend_font_size = 18)
   {
   set.seed(88)
@@ -47,7 +48,7 @@ makeSubNetGraph <- function(subNet,
       geom_edge_link(aes(color  = !!sym_edge_color_by, 
                          start_cap = label_rect(node1.display_name, fontsize = font_size), 
                          end_cap = label_rect(node2.display_name, fontsize =font_size)), edge_width = edge_width, 
-                     arrow = arrow(angle = 15, ends ='last', length = unit(.5, "lines"), type = 'closed'), 
+                     arrow = arrow(angle = 15, ends ='last', length = unit(arrow_size,  "lines"), type = 'closed'), 
                      #end_cap =  circle(2, 'mm'),
                      show.legend = TRUE)
   }else{
@@ -55,7 +56,7 @@ makeSubNetGraph <- function(subNet,
       geom_edge_link(aes(start_cap = label_rect(node1.display_name, fontsize = font_size), 
                          end_cap = label_rect(node2.display_name, fontsize = font_size)),
                      color = '#BEBEBE', 
-                     arrow = arrow(ends ='last', angle = 15, length = unit(.5, "lines"), type = 'closed'),
+                     arrow = arrow(ends ='last', angle = 15, length = unit(arrow_size, "lines"), type = 'closed'),
                      #end_cap = rectangle(width = 10, height = 10, width_unit = 'mm', height_unit = 'mm'),
                      edge_width = edge_width)
   }
@@ -140,7 +141,7 @@ makeSubNetGraph <- function(subNet,
     edge_value <- c('#fb8072', '#BEBEBE')
     gg <- gg + scale_edge_color_manual(breaks = edge_breaks, values = edge_value)
   }else if(edge_color_by == "Correlation"){
-    gg <- gg + scale_edge_color_distiller(palette = edge_color_palette, direction = -1, limits = c(-1, 1))
+    gg <- gg + scale_edge_color_distiller(palette = edge_color_palette, direction = -1, limits = color_scale_limits, oob = scales::squish)
   }else if(edge_color_by == "Reg_weight") {
     gg <- gg + scale_edge_color_distiller(palette = edge_color_palette, direction = -1, limits = color_scale_limits, oob = scales::squish)
   }

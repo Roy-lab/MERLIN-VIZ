@@ -11,11 +11,11 @@ library(gridExtra)
 makeSubgraphHeatmap <- function(subNet,
   display_name = 1, 
   edge_color_by = NA, 
-  edge_color_palette = "RdBu", 
+  edge_color_palette = "RdBl", 
   font_size = 18, 
   direction = 1, 
-  expression_color_palette = "RdBu", 
-  tfa_color_palette = "PiYG",
+  expression_color_palette = "Reds", 
+  tfa_color_palette = "Greens",
   scale_edge_color  = c(-1, 1), 
   scale_expression_colors = c(-5,5), 
   scale_tfa_colors = c(-5, 5), 
@@ -32,9 +32,6 @@ makeSubgraphHeatmap <- function(subNet,
     return(ggplot())
   }
   
-  if(edge_color_by == "Correlation"){
-    scale_edge_color <- c(-1, 1)
-  }
   
   sym_node_name_by <- ifelse(is.na(node_name_by), NA, sym(node_name_by))
   sym_edge_color_by <- ifelse(is.na(edge_color_by), NA, sym(edge_color_by))
@@ -49,15 +46,18 @@ makeSubgraphHeatmap <- function(subNet,
     filter(node_type == "nca") %>% 
     mutate(feature = factor(feature, levels = feature)) %>% 
     mutate(`Common Name` = factor(`Common Name`, levels = `Common Name`)) %>% 
-    unnest_longer(expression)
+    unnest_longer(expression, indices_to = "expression_id") 
   
   num_nca_genes <- length(unique(subset$feature))
-  nca_gene_order <- rev(unique(subset %>% pull(feature)))
+  nca_gene_order <- rev(unique(subset %>% pull(feature)))  
+  
+  
   if(nrow(subset) > 0){
+  
   ggNCA <- ggplot(subset, 
                aes(x = expression_id, y = !!sym_node_name_by, fill = expression)) + 
     geom_tile() + 
-    scale_fill_distiller(palette = tfa_color_palette, direction = -1, 
+    scale_fill_distiller(palette = tfa_color_palette, direction = direction, 
                          limits = scale_tfa_colors, oob = scales::squish, name = "TFA") + 
     scale_x_discrete(expand = c(0,0)) + 
     scale_y_discrete(expand = c(0,0)) + 
@@ -79,15 +79,18 @@ makeSubgraphHeatmap <- function(subNet,
     filter(node_type == "scr") %>% 
     mutate(feature = factor(feature, levels = feature)) %>% 
     mutate(`Common Name` = factor(`Common Name`, levels = `Common Name`)) %>% 
-    unnest_longer(expression)
+    unnest_longer(expression, indices_to = "expression_id") 
   
-  num_reg_genes <- length(unique(subset$feature))
-  reg_gene_order <- rev(unique(subset %>% pull(feature)))
+    num_reg_genes <- length(unique(subset$feature))
+    reg_gene_order <- rev(unique(subset %>% pull(feature)))
+  
+  
   if(nrow(subset) > 0){
+
     ggReg <- ggplot(subset, 
                     aes(x = expression_id, y = !!sym_node_name_by, fill = expression)) + 
       geom_tile() + 
-      scale_fill_distiller(palette = expression_color_palette, direction = -1, 
+      scale_fill_distiller(palette = expression_color_palette, direction = direction, 
                            limits = scale_expression_colors, oob = scales::squish) + 
       scale_x_discrete(expand = c(0,0)) + 
       scale_y_discrete(expand = c(0,0)) + 
@@ -109,15 +112,17 @@ makeSubgraphHeatmap <- function(subNet,
     filter(node_type == "tar") %>%
     mutate(feature = factor(feature, levels = feature)) %>% 
     mutate(`Common Name` = factor(`Common Name`, levels = `Common Name`)) %>% 
-    unnest_longer(expression)
+    unnest_longer(expression, indices_to = "expression_id") 
   
   num_tar_genes <- length(unique(subset$feature))
   tar_gene_order <- rev(unique(subset %>% pull(feature)))
+ 
   if(nrow(subset) > 0){
+  
     ggTar <- ggplot(subset, 
                     aes(x = expression_id, y = !!sym_node_name_by, fill = expression)) + 
       geom_tile() + 
-      scale_fill_distiller(palette = expression_color_palette, direction = -1, 
+      scale_fill_distiller(palette = expression_color_palette, direction = direction, 
                            limits = scale_expression_colors, oob = scales::squish) + 
       scale_x_discrete(expand = c(0,0)) + 
       scale_y_discrete(expand = c(0,0)) + 
@@ -159,7 +164,6 @@ makeSubgraphHeatmap <- function(subNet,
   
   gg <- gg + plot_layout(ncol = 1, nrow = length(plot_list), heights = num_genes_list,guides = 'collect')
 
-          
   gene_order <- fct_c(tar_gene_order, reg_gene_order, tar_gene_order)
     
   ## Set up network visualization 
@@ -178,7 +182,7 @@ makeSubgraphHeatmap <- function(subNet,
     scale_y_continuous(expand = c(0,0), limits = c(0, max(subNet %N>% as_tibble %>% pull(y)) + .5)) + 
     scale_x_continuous(expand = c(.05,.05), limits = c(NA, 0)) + 
   
-    scale_edge_color_distiller(palette = edge_color_palette, direction = -1, limits = scale_edge_color) + 
+    scale_edge_color_distiller(palette = edge_color_palette, direction = -1, limits = scale_edge_color, oob = scales::squish) + 
     scale_alpha_continuous(limits = c(0, 1), range= c(0, 1)) + 
     theme_void() + 
     theme(

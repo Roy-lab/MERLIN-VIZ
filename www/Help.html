@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.4.555">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="Roy Lab">
+<meta name="dcterms.date" content="2025-05-23">
+
+<title>MERLIN-VIZ</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="Help_files/libs/clipboard/clipboard.min.js"></script>
+<script src="Help_files/libs/quarto-html/quarto.js"></script>
+<script src="Help_files/libs/quarto-html/popper.min.js"></script>
+<script src="Help_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="Help_files/libs/quarto-html/anchor.min.js"></script>
+<link href="Help_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="Help_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="Help_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="Help_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="Help_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<link href="Help_files/libs/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+<script src="Help_files/libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
+<link href="Help_files/libs/datatables-css-0.0.0/datatables-crosstalk.css" rel="stylesheet">
+<script src="Help_files/libs/datatables-binding-0.33/datatables.js"></script>
+<script src="Help_files/libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<link href="Help_files/libs/dt-core-1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="Help_files/libs/dt-core-1.13.6/css/jquery.dataTables.extra.css" rel="stylesheet">
+<script src="Help_files/libs/dt-core-1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="Help_files/libs/jszip-1.13.6/jszip.min.js"></script>
+<script src="Help_files/libs/pdfmake-1.13.6/pdfmake.js"></script>
+<script src="Help_files/libs/pdfmake-1.13.6/vfs_fonts.js"></script>
+<link href="Help_files/libs/dt-ext-buttons-1.13.6/css/buttons.dataTables.min.css" rel="stylesheet">
+<script src="Help_files/libs/dt-ext-buttons-1.13.6/js/dataTables.buttons.min.js"></script>
+<script src="Help_files/libs/dt-ext-buttons-1.13.6/js/buttons.html5.min.js"></script>
+<script src="Help_files/libs/dt-ext-buttons-1.13.6/js/buttons.colVis.min.js"></script>
+<script src="Help_files/libs/dt-ext-buttons-1.13.6/js/buttons.print.min.js"></script>
+<link href="Help_files/libs/crosstalk-1.2.1/css/crosstalk.min.css" rel="stylesheet">
+<script src="Help_files/libs/crosstalk-1.2.1/js/crosstalk.min.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active" data-toc-expanded="-1">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul class="collapse">
+  <li><a href="#overview" id="toc-overview" class="nav-link active" data-scroll-target="#overview">Overview</a></li>
+  <li><a href="#how-to-use-merlin-viz" id="toc-how-to-use-merlin-viz" class="nav-link" data-scroll-target="#how-to-use-merlin-viz">How to use MERLIN-VIZ</a>
+  <ul class="collapse">
+  <li><a href="#searching-via-a-list-of-genes" id="toc-searching-via-a-list-of-genes" class="nav-link" data-scroll-target="#searching-via-a-list-of-genes">Searching via a list of genes:</a></li>
+  <li><a href="#modifying-graph-apperances" id="toc-modifying-graph-apperances" class="nav-link" data-scroll-target="#modifying-graph-apperances">Modifying graph apperances</a></li>
+  <li><a href="#including-additional-genes-buttons" id="toc-including-additional-genes-buttons" class="nav-link" data-scroll-target="#including-additional-genes-buttons">Including additional genes buttons:</a></li>
+  <li><a href="#search-using-merlin-modules" id="toc-search-using-merlin-modules" class="nav-link" data-scroll-target="#search-using-merlin-modules">Search using MERLIN modules</a></li>
+  <li><a href="#search-via-go-term" id="toc-search-via-go-term" class="nav-link" data-scroll-target="#search-via-go-term">Search via GO term</a></li>
+  <li><a href="#seach-via-network-diffusion" id="toc-seach-via-network-diffusion" class="nav-link" data-scroll-target="#seach-via-network-diffusion">Seach via network diffusion</a></li>
+  <li><a href="#nodes-table" id="toc-nodes-table" class="nav-link" data-scroll-target="#nodes-table">Nodes table</a></li>
+  <li><a href="#module-table" id="toc-module-table" class="nav-link" data-scroll-target="#module-table">Module table</a></li>
+  <li><a href="#gene-expression-heatmap" id="toc-gene-expression-heatmap" class="nav-link" data-scroll-target="#gene-expression-heatmap">Gene Expression Heatmap</a></li>
+  </ul></li>
+  <li><a href="#what-is-merlin" id="toc-what-is-merlin" class="nav-link" data-scroll-target="#what-is-merlin">What is MERLIN</a>
+  <ul class="collapse">
+  <li><a href="#merlin-is-a-module-constrained-network" id="toc-merlin-is-a-module-constrained-network" class="nav-link" data-scroll-target="#merlin-is-a-module-constrained-network">MERLIN is a module constrained network</a></li>
+  <li><a href="#estimating-confidence-of-merlin-predictions" id="toc-estimating-confidence-of-merlin-predictions" class="nav-link" data-scroll-target="#estimating-confidence-of-merlin-predictions">Estimating confidence of MERLIN predictions</a></li>
+  <li><a href="#what-is-the-difference-between-merlin-and-merlin-p-tfa" id="toc-what-is-the-difference-between-merlin-and-merlin-p-tfa" class="nav-link" data-scroll-target="#what-is-the-difference-between-merlin-and-merlin-p-tfa">What is the difference between MERLIN and MERLIN-P-TFA?</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">MERLIN-VIZ</h1>
+<p class="subtitle lead">An overview of MERLIN-VIZ and Introduction to GRAsp</p>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>Roy Lab </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">May 23, 2025</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<hr>
+<section id="overview" class="level1">
+<h1>Overview</h1>
+<p>This help document was originally written for the GRAsp (Gene Regulation of Aspergillus) instance of the MERLIN-VIZ project. All of the functionality of MERLIN-Viz is comparable across different instances. Please use this help document along with the <a href="https://grasp.wid.wisc.edu/">GRAsp website</a> to better understand how to use this interactive tool.</p>
+<p>GRAsp is a genome-wide gene-regulatory network that was inferred using the MERLIN-P-TFA package and visualized with the MERLIN-VIZ framework. Data was collected form publicly available RNA-seq data sets from multiple strains of <em>A. fumigatus</em> In each of these data sets a variety of different experimental conditions are observed e.g.&nbsp;exposure to drugs, signals, temperature change, pathogenesis etc. We normalized all data sets and then attempted to learn a regulatory network where we predict the expression of genes using the expression of transcription factors. For more information on the MERLIN inference algorithm see the section <strong>What is MERLIN</strong> below. We hope that this project provides new insight into the roles of transcription factors and improves general knowledge about <em>A. fumigatus</em>.</p>
+<hr>
+<!-- # Network Vocabulary: -->
+<!-- Below is a list of vocabulary that will be useful when reading this document. For more information expand the more information tab below. -->
+<!-- * Graph - A mathematical model of a network. It consists of a list of nodes and edges.  -->
+<!-- * Nodes - A list of objects that we want to relate in the network. In the case of MERLIN, these are genes. MERLIN-P-TFA also includes additional nodes that have gene names followed by the suffix nca. NCA stands for network component analysis. These nodes indicate gene profiles that are estimates of the transcription factor activity rather than the gene expression itself. A description of network component analysis and why transcription factor activity may be uses is included in the **What is MERLIN** section below. Transcription factor activity profiles are more directly related to regulatory mechanism and thus are better predictors of regulatory relationships.   -->
+<!-- * Edges - Used to model a relationship between objects in a graph. In MERLIN if two genes are part of a regulator target pair they are connected by an edge.  -->
+<!-- * Neighbors - Two nodes are neighbors if they are connected by an edge.  -->
+<!-- * Neighborhood - A neighborhood of a node is all other nodes that are connected to it. -->
+<!-- * Degree - The number of connections a node has.  -->
+<!-- * Module - A group of nodes which are related in a particular context. In MERLIN a module consists of a list of nodes that are co-regulated and co-expressed.  -->
+<!-- * Enrichment - The proportion of genes that meet a criterion within a module vs the proportion of genes that meet the same criteria in the population. This value is hard to interpret by itself, thus we instead compute a p-value for how significant the enrichment is. The p-values are computed using a hypergeometric test fallowed by multiple test correction. GRAsp makes use enrichment p-values using three different criteria. -->
+<!--   * Gene list enrichment - In this case, the criteria is if the gene is found on the gene list used to search the network. A module with more significant enrichment p-value is likely more related to the query of interest. -->
+<!--   * GO enrichment - GO stands for gene ontology. These are sets of predefined terms that assign functional annotation for genes. In computational biology they are useful in assessing if groups of genes have a common purpose. We do this through GO term enrichment.  In this case, the enrichment criterion is satisfied if a gene matches a particular GO term. For each GO term we can test to see if the module is enriched with genes matching that term. The idea behind this test is to try and associate Merlin modules to a particular biological function. All GO terms come are sourced from fungiDB and are found at this [link](https://fungidb.org/fungidb/app/downloads/). -->
+<!--   * Regulator enrichment- In this case, the criteria is that the gene has targets within the module. This is used to determine if a module is a governing regulator of a particular module. This can be used to determine an important regulator.  -->
+<!-- <details>  -->
+<!--   <summary> More information </summary> -->
+<!--   <p> The goal of this work is to try and understand the regulatory mechanism as of *A. fumigatus*. To do this we use a mathematical object that is referred to as a graph or equivalently a network. As many of the users of this toolkit may be unfamiliar with the formalism of this branch of mathematics, we decided to include an aside discussing some common phraseology that will be included throughout the rest of the document. Note that the study of graphs, called graph theory, is a  developed branch of mathematics with many applications. As such, there is a set of language that is used when describing components of a graph that allow mathematicians to discuss common structures without needing to understand specific contexts such as cell biology. We often default to these terms out of convenience. </p> -->
+<!--   A graph is formally an object containing two sets. The first set is a collection of objects which are often referred to as nodes or vertices. The second set is a set of relations which are often called edges. To demonstrate these rather abstract objects, we will use an example. Imagine you are at a party and the mathematician friend is sitting in the corner. They have the question "how are all the people here related?". To store the information, the mathematician might decide to use a graph. In this case, its would make sense to consider all of the people as nodes. Then if two people knew each other before the party they might denote the relationship as an edge. The entire set of people and all of these relationships would compose the graph. In the context of MERLIN, and in particular GRAsp, we denote the set of all genes as nodes genes. An edge symbolizes a regulatory relationship between two genes.  -->
+<!--   There are a few other terms that will be helpful when discussing the output of MERLIN. The first is a **module**. In graph theory, the idea of a module is contextual but usually consists of a group of nodes with some shared property. In MERLIN we use modules to denote set of genes which are co-expressed and co-regulated. For more details on the idea of a MERLIN module see the section **MERLIN is a module constrained network**. The second, term is **degree**. The degree of a node is the number of edges that contain that node in a graph. A large degree indicates nodes that are highly connected. The final term is **neighbor**. We say two nodes are neighbors if an edge exists between those two nodes. The neighborhood of a node is all other nodes that are connected to it. These three concepts will provide a basic framework for discussing patterns in the network as well as understanding the outputs in the GRAsp tables (see section **Overview of the Display**). -->
+<!-- </details> -->
+<hr>
+</section>
+<section id="how-to-use-merlin-viz" class="level1">
+<h1>How to use MERLIN-VIZ</h1>
+<p>MERLIN is a powerful technique for leveraging data from multiple sources and making global prediction of gene regulation. However, interpreting a global regulatory network is challenging due to the large number of predicted regulatory relationships. To overcome this challenge we have developed a visualization framework for our <em>A. fumigatus</em> network called GRAsp. GRAsp allows users to search the gene regulatory network to for network components that may be relevant to their research. Currently GRAsp supports searching the network via a list of genes, searching MERLIN modules, by GO-term, and using network diffusion. To toggle between these choices, select the corresponding search criteria in the <strong>search method</strong> dialog box.</p>
+<section id="searching-via-a-list-of-genes" class="level2">
+<h2 class="anchored" data-anchor-id="searching-via-a-list-of-genes">Searching via a list of genes:</h2>
+<p>The first of the search methods is labeled <strong>Gene List</strong>. When selected you can either input a list of gene names in the <strong>Input Gene</strong> field or <strong>Upload a Gene List</strong> file containing a list of genes, one gene per line. Lets, start by entering <em>srbA</em> into the search field, with the <strong>Include Module Members</strong> option selected (default). This will visualize the <strong>MERLIN Module</strong> containing <em>srbA</em>.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-2-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>A <strong>MERLIN module</strong> is a collected on genes which are co-expressed and co-regulated. In the network visualization squared nodes correspond to transcriptional regulators and circular nodes correspond to targets. For example in the plot below, <em>srbA</em> and <em>srbB</em> represent two transcription factors. They are included in the set of candidate regulatory genes at the beginning of network inference. In comparison <em>erG25</em> <em>erG3</em> and <em>erG1</em> are not included in the set of candidate regulators because they do not have any known role in gene transcription regulation. They are each represented with rounded corners. Predicted regulatory relationships are captured with directed arrows. In the plot above <em>srbB</em> is a predicted regulator of <em>erG3</em>, <em>erG1</em> and <em>erG25</em>. It is also possible to have predicted regulatory relationships between regulators. In this case <em>srbA</em> and <em>srbB</em> co-regulate each other, which is represented by double sided arrow.</p>
+<p>The figure above is colored so that nodes within the same module are all the same color. It is possible to have regulators that are in other modules (such as <em>AFUA_3G12190</em>) which is a second module, or that are not assigned to any module (such as <em>AFUA_5G06120_nca</em>, which are colored black). Genes with the suffix <em>nca</em> indicate transcription factor activity profiles (TFA) of a gene, instead of a the gene expression profiles. These TFA profiles are informed by motif information and candidate target gene expression profiles. In practice, regulatory relationship between TFA profiles and expression profiles are both indicative of transcriptional regulation.</p>
+</section>
+<section id="modifying-graph-apperances" class="level2">
+<h2 class="anchored" data-anchor-id="modifying-graph-apperances">Modifying graph apperances</h2>
+<p>There are multiple ways to modify the figures to increase legibility and remove redundant nodes. Below are a list of supported plotting parameters:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 21%">
+<col style="width: 60%">
+<col style="width: 18%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: center;">Parameter</th>
+<th style="text-align: center;">Description</th>
+<th style="text-align: center;">Options</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><strong>Node layout</strong></td>
+<td style="text-align: center;">Supported algorithms for generating a node layout. Changing these may improve legibility based on the subgraph topology. All layouts are implemented with the igraph Package</td>
+<td style="text-align: center;">Fruchterman-Reingold, Davidson-Harel, Kamada-Kawai, and Large graph layout.</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Minimum number of genes in component</strong></td>
+<td style="text-align: center;">The minimum number of nodes required to display a connected component of the subgraph. For example setting this value to two remove genes without reulatory relationships from the visualization</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>Display gene names</strong></td>
+<td style="text-align: center;">A list of gene names to display in the figure. <strong>Note gene names can also be toggled by clicking on individual genes in the display.</strong></td>
+<td style="text-align: center;">All gene names in the figures</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Name format</strong></td>
+<td style="text-align: center;">If common, a common gene symbol will be used in place of the systematic name when available. Otherwise the systematic name is used for all genes.</td>
+<td style="text-align: center;">Common, Systematic</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>Name in node</strong></td>
+<td style="text-align: center;">If selected, the name of the genes will be displayed within the node. Otherwise, the gene names will be printed on top.</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Node color by</strong></td>
+<td style="text-align: center;">Coloring key for genes. If module, the genes are colored by there <strong>MERLIN module membership</strong>. If regulator, regulators are colored red and non-regulators are colored blue, If Gene name, then genes with similar gene symbols are colored the same. For exampled all <em>erg</em> genes will be labed with the same color</td>
+<td style="text-align: center;">Module, Regulator, Gene Name</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>Node color palette</strong></td>
+<td style="text-align: center;">The palette to label the nodes</td>
+<td style="text-align: center;">Options are the <strong>Rcolorbrewer</strong> qualitative palettes</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Node size</strong></td>
+<td style="text-align: center;">Controls the node size</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>Node label font size</strong></td>
+<td style="text-align: center;">Controls the fond size of node labels</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Edge color by</strong></td>
+<td style="text-align: center;">Method for coloring edges. Regression Weights correspond to the learned weights from MERLIN.</td>
+<td style="text-align: center;">Correlation, Regression Weight</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>Edge color palette</strong></td>
+<td style="text-align: center;">The color palette used for edges.</td>
+<td style="text-align: center;">Options are the <strong>Rcolorbrewer</strong> diverging palettes</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Expand X axis</strong></td>
+<td style="text-align: center;">Adds or reduces white space along x axis. Used to fit labels.</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>Expand Y axis</strong></td>
+<td style="text-align: center;">Adds or reduces white space along y axis. Used to fit labels.</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Legend font size</strong></td>
+<td style="text-align: center;">Scales the legend font size</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>Image height (in)</strong></td>
+<td style="text-align: center;">The image height in inches. Effects figure after saving.</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>Image width (in)</strong></td>
+<td style="text-align: center;">The image height in inches. Effects figure after saving.</td>
+<td style="text-align: center;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>File name</strong></td>
+<td style="text-align: center;">The name of the file used when saving.</td>
+<td style="text-align: center;">default (file_name)</td>
+</tr>
+</tbody>
+</table>
+<p>Utilizing the following setting reproduces the figure 3B. of the paper. - <strong>Node Layout</strong> - Davidson-Harel - <strong>Minimum number of genes in component</strong> - 2 (removes modules genes without confident regulators) - <strong>Display gene names</strong> - cyp51A, erG25B, hyd1, srbA, srbB, erG3, erG25, fhpA, erG1, hem13, niiA, AFUA_5G06120_nca, AFUA_3G12190, bna4, srb5, hem14, exG4, erG3A, pre4, AFUA_7G04740, AFUA_6G02180 - <strong>Name in node</strong> - Selected - <strong>Node color by</strong> - Gene Name - <strong>Node color palette</strong>- Dark2 - <strong>Edge color by</strong> - Correlation - <strong>Edge color palette</strong> - RdBu</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-3-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="including-additional-genes-buttons" class="level2">
+<h2 class="anchored" data-anchor-id="including-additional-genes-buttons">Including additional genes buttons:</h2>
+<p>There are multiple extension to the <strong>search by gene list</strong> method. These are in the <strong>Additional Options</strong> section. These options include how additional genes are added to the list of genes in the <strong>Input Genes</strong> field. The options include:</p>
+<p>Show Neighbors - For each gene in the gene list, show all of the genes immediate neighbors as well as the current genes in the input list.</p>
+<p>Include Module Members - For each gene in the gene list, find the <strong>MERLIN module</strong> that contains that genes, and display all genes and all regulators associated with the module.</p>
+<p>Create Steiner Tree - If this is selected a estimated minimum tree connecting the genes in the graph is selected and displayed.</p>
+<p>Below is an example with two genes (srbA and hem13) and each of the different methods applied. For each of the figures I am using the following plot parameters:</p>
+<ul>
+<li><strong>Node Layout</strong> - Davidson-Harel</li>
+<li><strong>Minimum number of genes in component</strong> -1</li>
+<li><strong>Display gene names</strong> - hem13, srbA</li>
+<li><strong>Name in node</strong> - Selected</li>
+<li><strong>Node color by</strong> - Module</li>
+<li><strong>Node color palette</strong>- Pastel1</li>
+<li><strong>Edge color by</strong> - Correlation</li>
+<li><strong>Edge color palette</strong> - RdBu</li>
+</ul>
+<section id="srba-and-hem13-with-no-additional-options" class="level3">
+<h3 class="anchored" data-anchor-id="srba-and-hem13-with-no-additional-options">SrbA and Hem13 with no additional options</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="srba-and-hem13-with-neighbors" class="level3">
+<h3 class="anchored" data-anchor-id="srba-and-hem13-with-neighbors">SrbA and Hem13 with neighbors</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="srba-and-hem13-with-genes-in-module" class="level3">
+<h3 class="anchored" data-anchor-id="srba-and-hem13-with-genes-in-module">SrbA and Hem13 with genes in module</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="srba-and-hem13-with-steiner-tree" class="level3">
+<h3 class="anchored" data-anchor-id="srba-and-hem13-with-steiner-tree">SrbA and Hem13 with Steiner Tree</h3>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="search-using-merlin-modules" class="level2">
+<h2 class="anchored" data-anchor-id="search-using-merlin-modules">Search using MERLIN modules</h2>
+<p>GRAsp supports searching for genes directly by <strong>MERLIN module</strong> id. While the module ids are not ordered in any particular way, searching by modules can be useful when a module id is already known.</p>
+<p>For example, the module associated with <em>srbA</em> and <em>srbB</em> is 5395. By setting the <strong>Search Method</strong> to <strong>Modules</strong> and the <strong>Module ID</strong> fields to 5395, the previous module figure will appear.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="search-via-go-term" class="level2">
+<h2 class="anchored" data-anchor-id="search-via-go-term">Search via GO term</h2>
+<p>The search method allows you to identify <strong>MERLIN modules</strong> which are associated with specific biological process. Briefly, we utilized a hypergeometric test to test each <strong>MERLIN modules</strong> genes for enrichment of biological process gene ontology.</p>
+<p>For example if <strong>Search Method</strong> is set to <strong>GO-Term</strong>, and <strong>GO_terms</strong> is set to <strong>gliotoxin metabolic process</strong>. The plot parameters for the figure are listed below:</p>
+<ul>
+<li><strong>Node Layout</strong> - Kamada-Kawai</li>
+<li><strong>Minimum number of genes in component</strong> - 1</li>
+<li><strong>Display gene names</strong> - GliZ, nrps9, GliI, GliH, GliP, GliC, GliM, GliG, GliK, GliN, GliK, GliN, GliJ, GliA, GliT, GliF, GtmA, hsf1_nca, AFUA_3G11990_nca</li>
+<li><strong>Name in node</strong> - Selected</li>
+<li><strong>Node color by</strong> - Gene name</li>
+<li><strong>Node color palette</strong>- Dark2</li>
+<li><strong>Edge color by</strong> - Correlation</li>
+<li><strong>Edge color palette</strong> - RdBu</li>
+</ul>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="seach-via-network-diffusion" class="level2">
+<h2 class="anchored" data-anchor-id="seach-via-network-diffusion">Seach via network diffusion</h2>
+<p>The final method used to identify subnetworks is <strong>node diffusion</strong>. This method allows you to incorporate additional data with the network to prioritize components of the subgraph which may result in variation of gene expression. A common example of additional data that can be incorporated are differential expression p-values or log fold changes.</p>
+<p>The required input file should be a list of genes followed by an associated value and should be tab delimited. When this mode is select, all nodes will receive a score. The user can select the top percent of nodes to display. The results of diffusion have to be analyzed within the context of the initial data. If the log fold p-value is used, then the output diffusion score will indicate the importance of the node to a particular experiment. When using this search method, node sizes are scaled in the network visualization frame to demonstrate their importance.</p>
+<p>Below is an example of node diffusion using differential expression log fold changes after the first 30 minutes of exposure to LCOs. The diffusion is is effected by a hyperparameter which controls the diffusion bandwidth. A kernel is computed for multiple different . Additionally we provide hyperparameters to filter the results based on regulator properties. First we provide the <strong>Min # Of Targets</strong> which filters the set of candidate regulators based on their out-dgree. Second, we restrict the top regulators to display based on their diffusion score, <strong># of Regulators to Display</strong>.</p>
+<p>To generate the AtfA diffusion results in the paper, we used the log fold change values associated with the fir 30 minutes of exposure to LCO and the following plotting parameters:</p>
+<ul>
+<li><strong>Min # of Targets</strong> - 5</li>
+<li><strong>Lambda Score</strong> - 10</li>
+<li><strong># of Regulators to Display</strong> - 5</li>
+<li><strong>Node Layout</strong> - Davidson-Harel</li>
+<li><strong>Minimum number of genes in component</strong> - 1</li>
+<li><strong>Name in node</strong> - Selected</li>
+<li><strong>Node color by</strong> - module</li>
+<li><strong>Node color palette</strong>- Dark2</li>
+<li><strong>Edge color by</strong> - Correlation</li>
+<li><strong>Edge color palette</strong> - RdBu</li>
+</ul>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-10-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+<hr>
+</section>
+<section id="nodes-table" class="level2">
+<h2 class="anchored" data-anchor-id="nodes-table">Nodes table</h2>
+<p>GRAsp also provides a tabular view of the display data which may be useful for identify genes in the visualization field quickly. Information related to the gene can be viewed by clicking on the <strong>Gene Table</strong> tab above the visualization window.</p>
+<ul>
+<li>Gene Name - this is the systematic name of each gene. Each of these also acts as a hyperlink to fungi-db page.</li>
+<li>module - The genes MERLIN module assignment.This is the number to use in the search my module box if you want to look at a set of related genes. If a gene is not assigned to a <strong>MERLIN module</strong> this field will be empty.</li>
+<li>go - The gene ontology terms related to the gene of interest.</li>
+<li>Common Name - if there is a common gene name it is displayed here. Otherwise it is the systematic name. All names are based on the fungi-db database. There could be names that are missed due to fungi-db not being up to date. Also, sometimes a gene has two names due to being named by two different labs, e.g.&nbsp;FumR is also called FapR (the transcriptional regulatory of the fumagillin/pseurotin gene clusters).</li>
+<li>Description - This is fungi-db description of the gene function.</li>
+<li>neighbors - A list of genes that are connected to the gene listed under Gene Name. This is only as good as the latest analysis. It is helpful for you to do your own blast analysis.</li>
+<li>degree - The number of genes in the neighbors list.</li>
+</ul>
+<p>The current nodes table can saved by clicking on the download tab and selecting the desired file format.</p>
+<p>Below is an example node table for the <em>srbA</em>-<em>srbB</em> module.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-fcbc9767deafff8520c3" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-fcbc9767deafff8520c3">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24","25","26","27","28","29","30","31","32","33","34","35","36","37","38","39","40","41","42","43","44","45","46","47","48","49","50","51","52","53","54","55","56","57","58","59","60","61","62","63","64","65","66","67","68","69","70","71"],["<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G03150\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G03150<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G03610\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G03610<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G04315\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G04315<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G05720\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G05720<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G07400\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G07400<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G07480\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G07480<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G09420\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G09420<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G10350\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G10350<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G12830\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G12830<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_1G12840\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_1G12840<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G00320\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G00320<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G00330\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G00330<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G00750\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G00750<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G01260\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G01260<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G01890\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G01890<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G02430\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G02430<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G07600\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G07600<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G08890\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G08890<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G09350\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G09350<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_2G09650\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_2G09650<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_3G00810\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_3G00810<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_3G00820\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_3G00820<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_3G06340\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_3G06340<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_3G06360\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_3G06360<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_3G06410\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_3G06410<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_3G06600\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_3G06600<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_3G07310\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_3G07310<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_3G12190\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_3G12190<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G03410\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G03410<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G03460\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G03460<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G04820\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G04820<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G06210\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G06210<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G06890\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G06890<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G06940\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G06940<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G08330\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G08330<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G09060\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G09060<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G09810\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G09810<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_4G12930\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_4G12930<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G03290\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G03290<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G03380\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G03380<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G07780\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G07780<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G08200\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G08200<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G09830\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G09830<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G10650\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G10650<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G11190\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G11190<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G11820\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G11820<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G12190\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G12190<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G12920\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G12920<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G14680\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G14680<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G14690\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G14690<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G02090\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G02090<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G02180\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G02180<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G02280\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G02280<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G03770\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G03770<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G05140\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G05140<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G06450\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G06450<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G06830\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G06830<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G06840\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G06840<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G07340\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G07340<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G07770\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G07770<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G08440\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G08440<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_6G12310\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_6G12310<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_7G01260\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_7G01260<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_7G01520\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_7G01520<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_7G04740\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_7G04740<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_7G05920\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_7G05920<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_8G02440\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_8G02440<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_8G05140\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_8G05140<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_8G05590\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_8G05590<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_8G05600\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_8G05600<\/a>","<a href=\"https://fungidb.org/fungidb/app/record/gene/AFUA_5G06120\" target=\"_blank\" rel=\"noopener noreferrer\"> AFUA_5G06120_nca<\/a>"],[5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5081,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5194,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,5395,null],["cellular alcohol biosynthetic process","","biological_process","cellular alcohol biosynthetic process","anaphase-promoting complex-dependent catabolic process","protoporphyrinogen IX biosynthetic process","cristae formation","positive regulation of cellular respiration","nitric oxide biosynthetic process","nitrate assimilation","sterol biosynthetic process","","","oxygen metabolic process","ubiquinone biosynthetic process","protein insertion into mitochondrial inner membrane","establishment of protein localization to endoplasmic reticulum","dihydrofolate metabolic process","glucan catabolic process","aspartate biosynthetic process","sterol metabolic process","","mitochondrial cytochrome c oxidase assembly","biological_process","ubiquinone biosynthetic process","siroheme biosynthetic process","biological_process","biological_process","cellular detoxification of nitrogen compound","cellular response to hypoxia","cellular alcohol biosynthetic process","biological_process","cellular alcohol biosynthetic process","sphingoid biosynthetic process","mitochondrial aspartyl-tRNA aminoacylation","dolichyl monophosphate biosynthetic process","conidium germination","ubiquinone biosynthetic process","cellular calcium ion homeostasis","","cell growth mode switching, budding to filamentous","biological_process","cellular iron ion homeostasis","pyridoxine biosynthetic process","positive regulation of asexual sporulation resulting in formation of a cellular spore","cellular response to oxidative stress","regulation of single-species biofilm formation on inanimate substrate","iron ion transmembrane transport","biological_process","nucleotide metabolic process","proton transmembrane transport","mitotic sister chromatid cohesion","hydrogen peroxide catabolic process","reciprocal homologous recombination","cellular alcohol biosynthetic process","proteasomal ubiquitin-independent protein catabolic process","termination of RNA polymerase II transcription","2-oxoglutarate metabolic process","NAD metabolic process","alanine biosynthetic process","protoporphyrinogen IX biosynthetic process","ubiquinone biosynthetic process","biological_process","[4Fe-4S] cluster assembly","regulation of transcription by RNA polymerase II","unsaturated fatty acid biosynthetic process","cellular alcohol biosynthetic process","protein folding in endoplasmic reticulum","biological_process","biological_process","positive regulation of transcription by RNA polymerase II"],["erG24","AFUA_1G03610","AFUA_1G04315","erG24B","AFUA_1G07400","hem13","AFUA_1G09420","pGkA","niaD","niiA","erG3","AFUA_2G00330","AFUA_2G00750","srbA","AFUA_2G01890","AFUA_2G02430","AFUA_2G07600","AFUA_2G08890","exG4","AFUA_2G09650","hyd1","AFUA_3G00820","AFUA_3G06340","AFUA_3G06360","coq4","AFUA_3G06600","AFUA_3G07310","AFUA_3G12190","fhpA","srbB","erG25B","AFUA_4G06210","cyp51A","AFUA_4G06940","AFUA_4G08330","AFUA_4G09060","horA","AFUA_4G12930","AFUA_5G03290","AFUA_5G03380","erG1","AFUA_5G08200","AFUA_5G09830","AFUA_5G10650","AFUA_5G11190","svf1","AFUA_5G12190","AFUA_5G12920","AFUA_5G14680","AFUA_5G14690","AFUA_6G02090","AFUA_6G02180","aspf3","AFUA_6G03770","erG3A","pre4","srb5","AFUA_6G06840","bna4","AFUA_6G07770","hem14","AFUA_6G12310","AFUA_7G01260","AFUA_7G01520","AFUA_7G04740","AFUA_7G05920","erG25","AFUA_8G05140","AFUA_8G05590","AFUA_8G05600","AFUA_5G06120_nca"],["C-14 sterol reductase, putative","protein of unknown function","Ortholog of A. nidulans FGSC A4 : AN0466, A. oryzae RIB40 : AO090003000918, Aspergillus wentii : Aspwe1_0037360 and Aspergillus sydowii : Aspsy1_0041113","C-14 sterol reductase, putative","Has domain(s) with predicted role in anaphase-promoting complex-dependent proteasomal ubiquitin-dependent protein catabolic process, regulation of mitotic metaphase/anaphase transition and anaphase-promoting complex localization","Coproporphyrinogen III oxidase with a predicted role in heme biosynthesis","Ortholog of A. nidulans FGSC A4 : AN1347, Aspergillus wentii : Aspwe1_0024553, Aspergillus sydowii : Aspsy1_0074209 and Aspergillus terreus NIH2624 : ATET_08565","Putative phosphoglycerate kinase","Nitrate reductase","Putative nitrite reductase","putative sterol delta 5,6-desaturase","Has domain(s) with predicted hydrolase activity, hydrolase activity, acting on carbon-nitrogen (but not peptide) bonds, in linear amidines activity and role in metabolic process","Predicted oxidoreductase","Sterol regulatory element binding protein (SREBP)","Ortholog(s) have 2-octoprenyl-3-methyl-6-methoxy-1,4-benzoquinone hydroxylase activity, role in ubiquinone biosynthetic process and mitochondrial inner membrane localization","Ortholog(s) have role in protein import into mitochondrial inner membrane, protein import into mitochondrial matrix and mitochondrial inner membrane presequence translocase complex, plasma membrane localization","Putative signal recognition particle protein","Ortholog(s) have dihydrofolate reductase activity, drug binding, mRNA binding activity, role in dihydrofolate metabolic process, tetrahydrofolate biosynthetic process and mitochondrion localization","Glucan endo-1,6-beta-glucosidase B, putative","Aspartate transaminase","Putative cholestenol delta-isomerase","Has domain(s) with predicted poly(beta-D-mannuronate) lyase activity, role in alginic acid catabolic process and periplasmic space localization","Ortholog(s) have unfolded protein binding activity, role in mitochondrial respiratory chain complex IV assembly and integral component of membrane, mitochondrial inner membrane, plasma membrane localization","Ortholog of A. nidulans FGSC A4 : AN4754, A. niger CBS 513.88 : An11g09980, A. oryzae RIB40 : AO090020000115, Aspergillus wentii : Aspwe1_0029373 and Aspergillus sydowii : Aspsy1_0087864","Ubiquinone biosynthesis protein Coq4, mitochondrial, putative","Ortholog(s) have uroporphyrin-III C-methyltransferase activity and role in cellular response to drug, methionine biosynthetic process, siroheme biosynthetic process","Ortholog of A. nidulans FGSC A4 : AN12127, A. niger CBS 513.88 : An02g13400, A. oryzae RIB40 : AO090020000191, Aspergillus wentii : Aspwe1_0173528 and Aspergillus sydowii : Aspsy1_0043134, Aspsy1_0833750","Has domain(s) with predicted zinc ion binding activity","Putative flavohemoprotein","Sterol Regulatory Element Binding Protein Family member","C-4 methyl sterol oxidase Erg25, putative","Ortholog of A. nidulans FGSC A4 : AN10542, A. niger CBS 513.88 : An04g00510, A. oryzae RIB40 : AO090023000969, Aspergillus sydowii : Aspsy1_0094879 and Aspergillus terreus NIH2624 : ATET_05601","14-alpha sterol demethylase","Ortholog(s) have sphingolipid delta-4 desaturase activity, role in cellular response to glucose starvation, hyphal growth, response to heat, sphingosine biosynthetic process and endoplasmic reticulum localization","Ortholog(s) have aspartate-tRNA ligase activity, role in mitochondrial aspartyl-tRNA aminoacylation and mitochondrion localization","Putative phosphatidate cytidylyltransferase","ubiquinone biosynthesis protein","Ortholog(s) have oxidoreductase activity, acting on paired donors, with incorporation or reduction of molecular oxygen, reduced flavin or flavoprotein as one donor, and incorporation of one atom of oxygen activity","Ortholog of A. nidulans FGSC A4 : AN8197, A. niger CBS 513.88 : An09g05540, A. oryzae RIB40 : AO090102000532, Aspergillus wentii : Aspwe1_0115831 and Aspergillus sydowii : Aspsy1_0211779","Ortholog(s) have mitochondrion localization","Putative squalene monooxygenase","Ortholog of A. nidulans FGSC A4 : AN11006, A. niger CBS 513.88 : An03g04400, A. oryzae RIB40 : AO090701000738, Aspergillus wentii : Aspwe1_0048123 and Aspergillus sydowii : Aspsy1_0046266","Ortholog(s) have role in cellular iron ion homeostasis and mitochondrion localization","Has domain(s) with predicted FMN binding, oxidoreductase activity, oxidoreductase activity, acting on the CH-NH2 group of donors activity and role in oxidation-reduction process","Ortholog(s) have role in positive regulation of asexual sporulation resulting in formation of a cellular spore, positive regulation of secondary metabolite biosynthetic process and plasma membrane localization","Ortholog(s) have cytosol, nucleus localization","Ortholog(s) have DNA translocase activity, TBP-class protein binding, transcription factor activity, core RNA polymerase II binding activity","Putative iron-regulated transporter","Protein with Yap1-dependent induction in response to hydrogen peroxide","Has domain(s) with predicted ATP adenylyltransferase activity","Ortholog(s) have fungal-type vacuole membrane, vacuolar proton-transporting V-type ATPase, V1 domain localization","Ortholog of A. nidulans FGSC A4 : AN8684/ngn24, A. niger CBS 513.88 : An12g08660, A. oryzae RIB40 : AO090120000103, Aspergillus wentii : Aspwe1_0035741 and Aspergillus sydowii : Aspsy1_0097118","Allergen Asp f 3","Ortholog(s) have role in reciprocal meiotic recombination and cytosol, endoplasmic reticulum, nucleus localization","Sterol delta 5,6-desaturase ERG3, putative","Proteasome component","RNA polymerase II mediator complex subunit","Transcript up-regulated in conidia exposed to neutrophils","kynurenine 3-monooxygenase, putative","Putative alanine aminotransferase","Predicted oxygen-dependent protoporphyrinogen oxidase","Ortholog(s) have mitochondrion localization","Ortholog of A. nidulans FGSC A4 : AN3374, A. niger CBS 513.88 : An12g01920, A. oryzae RIB40 : AO090010000200, Aspergillus sydowii : Aspsy1_0146393 and Aspergillus terreus NIH2624 : ATET_08690","Ortholog(s) have cytosol, nucleus localization","Ortholog of A. nidulans FGSC A4 : AN3506, AN7923, AN10467, AN8529, AN11165, AN0364, AN7376 and A. fumigatus Af293 : Afu1g01960, Afu3g01040, Afu3g03315, Afu7g01960, Afu8g05750, Afu5g00135, Afu7g06526","Ortholog(s) have stearoyl-CoA 9-desaturase activity","C-4 methyl sterol oxidase, putative","Ortholog(s) have protein disulfide isomerase activity, protein disulfide oxidoreductase activity, role in protein folding and endoplasmic reticulum membrane localization","Ortholog of A. nidulans FGSC A4 : AN1548, A. niger CBS 513.88 : An15g05250, An16g07090, An07g05440, A. oryzae RIB40 : AO090003000727, AO090005000587 and Aspergillus wentii : Aspwe1_0045167","Ortholog of A. nidulans FGSC A4 : AN1549, A. niger CBS 513.88 : An16g07080, A. oryzae RIB40 : AO090005000583, Aspergillus wentii : Aspwe1_0187131 and Aspergillus sydowii : Aspsy1_0086712","Ortholog(s) have role in positive regulation of exit from mitosis and nucleus localization"],["   erG24    ","AFUA_1G03610 |     srbB    ","AFUA_1G04315 | AFUA_3G12190","   erG24B   ","AFUA_1G07400 | AFUA_6G02180","   hem13     | AFUA_3G12190 |     srbB    ","AFUA_1G09420 | AFUA_3G12190","    pGkA    ","    niaD    ","    niiA     | AFUA_5G06120_nca","    erG3     |     srbA     |     srbB    ","AFUA_2G00330","AFUA_2G00750","    abcC     |     erG3     | AFUA_2G01250 |     srbA     | AFUA_2G16160 |     hyd1     | AFUA_3G04220 |     srbB     |    erG25B    |    cyp51A    | AFUA_4G07310 |     kGd1     | AFUA_5G10660","AFUA_2G01890 | AFUA_7G04740 | AFUA_8G03970","AFUA_2G02430 | AFUA_6G02180","AFUA_2G07600 | AFUA_8G03970","AFUA_2G08890","    exG4     | AFUA_6G02180 | AFUA_6G09300","AFUA_2G09650","    srbA     |     hyd1    ","AFUA_3G00820","AFUA_3G06340 | AFUA_6G02180","AFUA_3G06360 | AFUA_6G02180","    coq4    ","AFUA_3G06600 | AFUA_5G06120_nca","AFUA_3G07310 | AFUA_3G12190","AFUA_1G01790 | AFUA_1G04315 | AFUA_1G06320 |    hem13     | AFUA_1G09420 | AFUA_2G09330 | AFUA_2G11790 | AFUA_3G05740 | AFUA_3G07310 | AFUA_3G11430 | AFUA_3G12190 | AFUA_4G13770 | AFUA_5G11190 | AFUA_5G14680 |     bna4     | AFUA_6G09150 | AFUA_7G04690 | AFUA_7G05030 | AFUA_8G05140 | AFUA_8G05600","    fhpA     |     srbB    ","AFUA_1G03610 |    hem13     |     rcfB     | AFUA_1G16480 |     erG3     |     srbA     |    cox5b     | AFUA_2G05450 |     fhpA     |     srbB     | AFUA_4G04605 | AFUA_4G12930 |     erG1     | AFUA_5G08200 | AFUA_5G14690 | AFUA_6G02470 | AFUA_6G07770 | AFUA_7G05920 |    erG25     | AFUA_8G05590","    srbA     |    erG25B   ","AFUA_4G06210 | AFUA_6G02180","    srbA     |    cyp51A   ","AFUA_4G06940 | AFUA_7G04740","AFUA_4G08330","AFUA_4G09060","    horA    ","    srbB     | AFUA_4G12930","AFUA_5G03290 | AFUA_7G04740","AFUA_5G03380","    srbB     |     erG1     | AFUA_6G11930","AFUA_1G15230 |     srbB     | AFUA_5G08200 | AFUA_5G06120_nca","AFUA_5G09830","AFUA_5G10650 | AFUA_6G02180","AFUA_3G12190 | AFUA_5G11190","    svf1    ","AFUA_5G12190","AFUA_5G12920","AFUA_3G12190 | AFUA_5G14680","    srbB     | AFUA_5G14690","AFUA_6G02090 | AFUA_6G02180","AFUA_1G07400 | AFUA_2G02430 | AFUA_2G05440 |     exG4     | AFUA_3G06340 | AFUA_3G06360 | AFUA_3G12180 | AFUA_4G06210 | AFUA_5G10650 | AFUA_6G02090 | AFUA_6G02180 |     pre4     |     srb5     |    hem14     | AFUA_7G01260 | AFUA_7G01520 | AFUA_7G05960 |   hsf1_nca  ","   aspf3    ","AFUA_6G03770 | AFUA_7G04740","    hapX     |    erG3A     | AFUA_7G04740","AFUA_6G02180 |     pre4     | AFUA_7G02540","AFUA_6G02180 |     srb5    ","    creA     | AFUA_6G06840","AFUA_3G12190 |     bna4    ","    srbB     | AFUA_6G07770","AFUA_6G02180 |    hem14     | AFUA_7G04740","AFUA_6G12310","AFUA_6G02180 | AFUA_7G01260","AFUA_6G02180 | AFUA_7G01520","AFUA_1G06780 | AFUA_2G01890 | AFUA_3G03445 | AFUA_4G06940 | AFUA_5G03290 | AFUA_6G03770 |    erG3A     |    hem14     | AFUA_6G09390 | AFUA_7G00410 | AFUA_7G04740 |   hsf1_nca  ","    srbB     | AFUA_7G05920","    srbB     |    erG25    ","AFUA_3G12190 | AFUA_8G05140","    srbB     | AFUA_8G05590","AFUA_3G12190 | AFUA_8G05600 | AFUA_5G06120_nca","AFUA_1G02770 | AFUA_1G03480 | AFUA_1G05680 | AFUA_1G11570 | AFUA_1G11770 | AFUA_1G11800 |     niiA     | AFUA_1G13640 | AFUA_1G14540 |     sod3     | AFUA_1G14710 | AFUA_1G15160 | AFUA_2G01650 | AFUA_2G03730 | AFUA_2G03740 | AFUA_2G03780 |     fahA     | AFUA_2G05000 | AFUA_2G10250 |     uaZ      | AFUA_2G13000 | AFUA_2G13010 | AFUA_2G13240 | AFUA_2G13265 | AFUA_2G13512 | AFUA_2G15450 | AFUA_2G16990 | AFUA_2G17290 | AFUA_3G00120 | AFUA_3G00610 | AFUA_3G01100 | AFUA_3G01230 | AFUA_3G01450 | AFUA_3G05730 |    met16     | AFUA_3G06600 |     fluG     | AFUA_3G07630 | AFUA_3G11040 | AFUA_3G11430 | AFUA_3G11500 | AFUA_3G12460 | AFUA_3G14440 | AFUA_3G15060 | AFUA_4G01550 | AFUA_4G03920 | AFUA_4G04200 | AFUA_4G06460 | AFUA_4G06640 | AFUA_4G08715 |     isa1     | AFUA_4G10890 | AFUA_4G12010 | AFUA_4G14620 | AFUA_5G00500 | AFUA_5G00550 | AFUA_5G01662 | AFUA_5G02600 | AFUA_5G02750 | AFUA_5G03670 | AFUA_5G03680 | AFUA_5G06720 | AFUA_5G06940 | AFUA_5G06990 | AFUA_5G07580 | AFUA_5G07890 | AFUA_5G07920 | AFUA_5G07930 | AFUA_5G08200 |     mccA     | AFUA_5G08930 | AFUA_5G08940 | AFUA_5G10060 | AFUA_5G10150 | AFUA_5G10560 | AFUA_5G11355 | AFUA_5G11390 | AFUA_5G12000 | AFUA_5G14195 | AFUA_5G14960 | AFUA_6G00240 | AFUA_6G04380 | AFUA_6G04850 | AFUA_6G04870 | AFUA_6G04890 | AFUA_6G06460 | AFUA_6G08760 | AFUA_6G08830 | AFUA_6G08920 | AFUA_6G11020 | AFUA_7G00630 | AFUA_7G01210 | AFUA_7G01250 | AFUA_7G01380 | AFUA_7G01390 | AFUA_7G01740 | AFUA_7G01760 | AFUA_7G01780 | AFUA_7G02380 | AFUA_7G04140 | AFUA_7G06800 | AFUA_8G00950 | AFUA_8G01310 | AFUA_8G01320 | AFUA_8G04390 | AFUA_8G05600 | AFUA_8G06230 | AFUA_8G06240 | AFUA_8G06250 | AFUA_8G07170 | AFUA_5G06120_nca"],[0,1,1,0,1,2,1,0,0,1,2,0,0,12,2,1,1,0,2,0,1,0,1,1,0,1,1,19,1,19,1,1,1,1,0,0,0,1,1,0,2,3,0,1,1,0,0,0,1,1,1,17,0,1,2,2,1,1,1,1,2,0,1,1,11,1,1,1,1,2,110],[0,0.0126453001355768,0.004176656622278925,0,0.005053762309549903,0.008811501158876805,0.004176656622278925,0,0,0.005303536578140059,0.01089616150460089,0,0,0.008972109010527406,0.005841481811285725,0.005053762309549903,0.006323413792259119,0,0.0094082620698337,0,0.008156462736843093,0,0.005053762309549903,0.005053762309549903,0,0.005303536578140059,0.004176656622278925,0.00459432228450682,0.0126453001355768,0.01390983014913448,0.00815646273684309,0.005053762309549903,0.008156462736843091,0.004828506029286354,0,0,0,0.01264530013557679,0.004828506029286354,0,0.009572073895598011,0.009011656607301825,0,0.005053762309549903,0.004176656622278925,0,0,0,0.004176656622278925,0.0126453001355768,0.005053762309549903,0.005559138540504892,0,0.004828506029286354,0.004796555083967488,0.005891277202181568,0.005053762309549902,0.005920867704287396,0.004176656622278925,0.0126453001355768,0.005176426272723753,0,0.005053762309549905,0.005053762309549905,0.005311356632214989,0.0126453001355768,0.0126453001355768,0.004176656622278926,0.0126453001355768,0.004965815485933752,0.005833890235954066]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>Gene Name<\/th>\n      <th>module<\/th>\n      <th>go<\/th>\n      <th>Common Name<\/th>\n      <th>Description<\/th>\n      <th>neighbors<\/th>\n      <th>degree<\/th>\n      <th>score<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Blfrtip","title":"node_table_srbA_srbB","buttons":["copy","print",{"extend":"collection","buttons":[{"extend":"csv","filename":"srbA_srbB"},{"extend":"excel","filename":"srbA_srbB"},{"extend":"pdf","filename":"srbA_srbB"}],"text":"Download"}],"lengthMenu":[[10,50,100,-1],["10","30","50","All"]],"paging":true,"columnDefs":[{"className":"dt-right","targets":[2,7,8]},{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"Gene Name","targets":1},{"name":"module","targets":2},{"name":"go","targets":3},{"name":"Common Name","targets":4},{"name":"Description","targets":5},{"name":"neighbors","targets":6},{"name":"degree","targets":7},{"name":"score","targets":8}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</section>
+<section id="module-table" class="level2">
+<h2 class="anchored" data-anchor-id="module-table">Module table</h2>
+<p>The module table is used to give additional information on all modules in the that have nodes in the network display. Each column can be sorted by an ordering placed on the column (alpha-numeric ordering). Below is a brief description of the elements in the module table.</p>
+<ul>
+<li>module - The current module number.</li>
+<li>Genes on List - these are the gene that match the current search criteria that are on the module.</li>
+<li>Genes - A list of all genes in the module.</li>
+<li>Gene list enrichment p-value - This shows the enrichment p-value of the genes on list. Lower p-values indicate a better match to the search criteria. For more information see the note on enrichment below.</li>
+<li>GO - A list of associated GO terms. Each GO term is displayed, followed by its enrichment p-value, then followed by all the genes in the module that have the associated p-value. For more information see the note on enrichment below.</li>
+<li>Regulators - A list of enriched regulators in the module. Each enriched regulator is displayed, followed by its enrichment p-value, followed by a list of its targets within the module. For more information see the note on enrichment below.</li>
+</ul>
+<p>The current module table can be saved by first placing a name in the <strong>Save File</strong> box. Then hit the download button. The table can be saved as an csv, excel, or pdf format.</p>
+<p>An example module table for the <em>srbA</em>-<em>srbB</em> module is below. Not that multiple module are displayed in the table because some regulators are are also enriched regulators for other modules.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div class="datatables html-widget html-fill-item" id="htmlwidget-7f0bdb13e5ec74d6d4ed" style="width:100%;height:auto;"></div>
+<script type="application/json" data-for="htmlwidget-7f0bdb13e5ec74d6d4ed">{"x":{"filter":"none","vertical":false,"extensions":["Buttons"],"data":[["1","2","3","4","5","6"],["<a href=\"#\" onclick=Shiny.setInputValue(\"module_id_info\", 4992);\">4992<\/a>","<a href=\"#\" onclick=Shiny.setInputValue(\"module_id_info\", 5366);\">5366<\/a>","<a href=\"#\" onclick=Shiny.setInputValue(\"module_id_info\", 5081);\">5081<\/a>","<a href=\"#\" onclick=Shiny.setInputValue(\"module_id_info\", 5407);\">5407<\/a>","<a href=\"#\" onclick=Shiny.setInputValue(\"module_id_info\", 5194);\">5194<\/a>","<a href=\"#\" onclick=Shiny.setInputValue(\"module_id_info\", 5395);\">5395<\/a>"],["AFUA_4G01550 | AFUA_5G00550 | AFUA_5G06720 | AFUA_6G00240 | AFUA_7G06800 | AFUA_8G05510 | AFUA_8G05520","AFUA_2G03010 | AFUA_2G13000 | AFUA_2G13010 | AFUA_3G06190 | AFUA_3G06460 | AFUA_4G07150 | AFUA_4G09870 | AFUA_5G02750 | AFUA_5G07890 | AFUA_5G10560","AFUA_1G16850 | AFUA_1G17170 | AFUA_2G08080 | AFUA_2G15490 | AFUA_3G08830 | AFUA_3G12190 | AFUA_3G14570 | AFUA_4G07280 | AFUA_4G13770 | AFUA_5G11170 | AFUA_6G02010 | AFUA_6G13390 | AFUA_7G01240 | AFUA_7G01290 | AFUA_7G04690 | AFUA_8G04650","AFUA_2G04230 | AFUA_2G10920 | AFUA_2G12450 | AFUA_3G01450 | AFUA_3G06660 | AFUA_4G12010 | AFUA_4G12870 | AFUA_5G07410 | AFUA_5G08470 | AFUA_5G08910 | AFUA_5G08930 | AFUA_5G08940 | AFUA_6G02860 | AFUA_6G03590 | AFUA_6G03730 | AFUA_6G08830 | AFUA_6G11020","AFUA_1G05840 | AFUA_1G06940 | AFUA_1G06950 | AFUA_2G01940 | AFUA_2G03900 | AFUA_2G15930 | AFUA_3G01650 | AFUA_3G05960 | AFUA_3G09240 | AFUA_3G11370 | AFUA_3G11620 | AFUA_3G14470 | AFUA_3G14600 | AFUA_3G14710 | AFUA_3G14870 | AFUA_4G11550 | AFUA_5G03400 | AFUA_5G03790 | AFUA_5G03800 | AFUA_5G07130 | AFUA_5G07620 | AFUA_5G09340 | AFUA_6G02180 | AFUA_6G04980 | AFUA_6G07180 | AFUA_6G07700 | AFUA_6G09110 | AFUA_6G09250 | AFUA_6G14410","AFUA_1G03150 | AFUA_1G03610 | AFUA_1G04315 | AFUA_1G05720 | AFUA_1G07400 | AFUA_1G07480 | AFUA_1G09420 | AFUA_1G10350 | AFUA_1G12830 | AFUA_1G12840 | AFUA_2G00320 | AFUA_2G00330 | AFUA_2G00750 | AFUA_2G01260 | AFUA_2G01890 | AFUA_2G02430 | AFUA_2G07600 | AFUA_2G08890 | AFUA_2G09350 | AFUA_2G09650 | AFUA_3G00810 | AFUA_3G00820 | AFUA_3G06340 | AFUA_3G06360 | AFUA_3G06410 | AFUA_3G06600 | AFUA_3G07310 | AFUA_4G03410 | AFUA_4G03460 | AFUA_4G04820 | AFUA_4G06210 | AFUA_4G06890 | AFUA_4G06940 | AFUA_4G08330 | AFUA_4G09060 | AFUA_4G09810 | AFUA_4G12930 | AFUA_5G03290 | AFUA_5G03380 | AFUA_5G07780 | AFUA_5G08200 | AFUA_5G09830 | AFUA_5G10650 | AFUA_5G11190 | AFUA_5G11820 | AFUA_5G12190 | AFUA_5G12920 | AFUA_5G14680 | AFUA_5G14690 | AFUA_6G02090 | AFUA_6G02280 | AFUA_6G03770 | AFUA_6G05140 | AFUA_6G06450 | AFUA_6G06830 | AFUA_6G06840 | AFUA_6G07340 | AFUA_6G07770 | AFUA_6G08440 | AFUA_6G12310 | AFUA_7G01260 | AFUA_7G01520 | AFUA_7G04740 | AFUA_7G05920 | AFUA_8G02440 | AFUA_8G05140 | AFUA_8G05590 | AFUA_8G05600"],[null,"GO term: mitochondrial electron transport, cytochrome c to oxygen<br/> module corrected p-value: 2.06e-13<br/>Module Genes: cox5b | AFUA_3G06190 | AFUA_4G07150 | AFUA_5G02750 | AFUA_5G10560<br/><br/><br/>GO term: aerobic electron transport chain<br/> module corrected p-value: 8.17e-11<br/>Module Genes: cox5b | AFUA_3G06190 | AFUA_4G07150 | AFUA_5G02750 | AFUA_5G10560<br/><br/><br/>GO term: mitochondrial ATP synthesis coupled electron transport<br/> module corrected p-value: 8.17e-11<br/>Module Genes: cox5b | AFUA_3G06190 | AFUA_4G07150 | AFUA_5G02750 | AFUA_5G10560<br/><br/><br/>GO term: ATP synthesis coupled electron transport<br/> module corrected p-value: 8.17e-11<br/>Module Genes: cox5b | AFUA_3G06190 | AFUA_4G07150 | AFUA_5G02750 | AFUA_5G10560<br/><br/><br/>GO term: oxidative phosphorylation<br/> module corrected p-value: 8.25e-11<br/>Module Genes: cox5b | AFUA_3G06190 | AFUA_4G07150 | AFUA_5G02750 | AFUA_5G10560<br/>",null,"GO term: leucine catabolic process<br/> module corrected p-value: 6.43e-08<br/>Module Genes: AFUA_2G12450 | mccA | AFUA_5G08940<br/><br/><br/>GO term: valine catabolic process<br/> module corrected p-value: 6.43e-08<br/>Module Genes: echA | AFUA_4G12870 | AFUA_6G11020<br/><br/><br/>GO term: short-chain fatty acid catabolic process<br/> module corrected p-value: 7.22e-10<br/>Module Genes: echA | acuD | mcsA | AFUA_6G03730<br/><br/><br/>GO term: leucine metabolic process<br/> module corrected p-value: 6.72e-07<br/>Module Genes: AFUA_2G12450 | mccA | AFUA_5G08940<br/><br/><br/>GO term: short-chain fatty acid metabolic process<br/> module corrected p-value: 1.92e-09<br/>Module Genes: echA | acuD | mcsA | AFUA_6G03730<br/>","GO term: anion transmembrane transport<br/> module corrected p-value: 4.55e-02<br/>Module Genes: fetC | ftrA | AFUA_6G09110<br/>","GO term: reactive nitrogen species metabolic process<br/> module corrected p-value: 1.40e-04<br/>Module Genes: niaD | niiA | fhpA<br/><br/><br/>GO term: heme biosynthetic process<br/> module corrected p-value: 1.34e-03<br/>Module Genes: hem13 | AFUA_3G06600 | hem14<br/><br/><br/>GO term: heme metabolic process<br/> module corrected p-value: 1.34e-03<br/>Module Genes: hem13 | AFUA_3G06600 | hem14<br/><br/><br/>GO term: porphyrin-containing compound biosynthetic process<br/> module corrected p-value: 1.34e-03<br/>Module Genes: hem13 | AFUA_3G06600 | hem14<br/><br/><br/>GO term: porphyrin-containing compound metabolic process<br/> module corrected p-value: 1.34e-03<br/>Module Genes: hem13 | AFUA_3G06600 | hem14<br/>"],["enriched regulator: AFUA_5G06120_nca<br/> regulator corrected p-value: 7.32e-08<br/>regulator targets: AFUA_4G01550 | AFUA_5G00550 | AFUA_5G06720 | AFUA_6G00240 | AFUA_7G06800 <br/>","enriched regulator: AFUA_5G06120_nca<br/> regulator corrected p-value: 1.46e-07<br/>regulator targets: AFUA_2G13000 | AFUA_2G13010 | AFUA_5G02750 | AFUA_5G07890 | AFUA_5G10560 <br/><br/><br/>enriched regulator: AFUA_3G11990<br/> regulator corrected p-value: 7.68e-06<br/>regulator targets: AFUA_2G13000 | AFUA_2G13010 | AFUA_4G09870 <br/>","enriched regulator: AFUA_2G09330<br/> regulator corrected p-value: 1.89e-06<br/>regulator targets: AFUA_3G12190 | AFUA_3G14570 | AFUA_5G11170 <br/>","enriched regulator: AFUA_5G06120_nca<br/> regulator corrected p-value: 2.56e-11<br/>regulator targets: fahA | AFUA_3G01450 | AFUA_4G12010 | mccA | AFUA_5G08930 | AFUA_5G08940 | AFUA_6G08830 | AFUA_6G11020 <br/><br/><br/>enriched regulator: AFUA_5G13310<br/> regulator corrected p-value: 7.68e-11<br/>regulator targets: AFUA_2G12450 | AFUA_3G01450 | AFUA_5G08930 | AFUA_5G08940 <br/>","enriched regulator: hsf1_nca<br/> regulator corrected p-value: 4.35e-42<br/>regulator targets: AFUA_1G05840 | AFUA_1G06950 | AFUA_2G03900 | AFUA_2G15930 | AFUA_3G05960 | AFUA_3G09240 | AFUA_3G11620 | AFUA_3G14470 | AFUA_3G14710 | AFUA_3G14870 | AFUA_4G11550 | AFUA_5G03400 | ftrA | AFUA_5G07130 | AFUA_5G07620 | AFUA_5G09340 | AFUA_6G02180 | AFUA_6G04980 | PIG-S | AFUA_6G07700 | AFUA_6G09110 | exG2 | AFUA_6G14410 <br/>","enriched regulator: AFUA_6G02180<br/> regulator corrected p-value: 3.11e-25<br/>regulator targets: AFUA_1G07400 | AFUA_2G02430 | exG4 | AFUA_3G06340 | AFUA_3G06360 | AFUA_4G06210 | AFUA_5G10650 | AFUA_6G02090 | pre4 | srb5 | hem14 | AFUA_7G01260 | AFUA_7G01520 <br/><br/><br/>enriched regulator: srbB<br/> regulator corrected p-value: 3.92e-23<br/>regulator targets: AFUA_1G03610 | hem13 | erG3 | srbA | fhpA | AFUA_4G12930 | erG1 | AFUA_5G08200 | AFUA_5G14690 | AFUA_6G07770 | AFUA_7G05920 | erG25 | AFUA_8G05590 <br/><br/><br/>enriched regulator: AFUA_3G12190<br/> regulator corrected p-value: 1.78e-14<br/>regulator targets: AFUA_1G04315 | hem13 | AFUA_1G09420 | AFUA_3G07310 | AFUA_5G11190 | AFUA_5G14680 | bna4 | AFUA_8G05140 | AFUA_8G05600 <br/><br/><br/>enriched regulator: AFUA_7G04740<br/> regulator corrected p-value: 1.26e-10<br/>regulator targets: AFUA_2G01890 | AFUA_4G06940 | AFUA_5G03290 | AFUA_6G03770 | erG3A | hem14 <br/><br/><br/>enriched regulator: srbA<br/> regulator corrected p-value: 4.57e-08<br/>regulator targets: erG3 | hyd1 | srbB | erG25B | cyp51A <br/><br/><br/>enriched regulator: AFUA_5G06120_nca<br/> regulator corrected p-value: 1.72e-02<br/>regulator targets: niiA | AFUA_3G06600 | AFUA_5G08200 | AFUA_8G05600 <br/>"]],"container":"<table class=\"display\">\n  <thead>\n    <tr>\n      <th> <\/th>\n      <th>module<\/th>\n      <th>Genes<\/th>\n      <th>GO<\/th>\n      <th>Regulators<\/th>\n    <\/tr>\n  <\/thead>\n<\/table>","options":{"dom":"Blfrtip","title":"module_table_srbA_srbB","buttons":["copy","print",{"extend":"collection","buttons":[{"extend":"csv","filename":"module_srbA_srbB"},{"extend":"excel","filename":"module_srbA_srbB"},{"extend":"pdf","filename":"module_srbA_srbB"}],"text":"Download"}],"lengthMenu":[[10,50,100,-1],["10","30","50","All"]],"paging":true,"columnDefs":[{"orderable":false,"targets":0},{"name":" ","targets":0},{"name":"module","targets":1},{"name":"Genes","targets":2},{"name":"GO","targets":3},{"name":"Regulators","targets":4}],"order":[],"autoWidth":false,"orderClasses":false}},"evals":[],"jsHooks":[]}</script>
+</div>
+</div>
+</section>
+<section id="gene-expression-heatmap" class="level2">
+<h2 class="anchored" data-anchor-id="gene-expression-heatmap">Gene Expression Heatmap</h2>
+<p>The final display option for GRAsp is the expression heatmap. The heatmap is organized into three blocks, the first is the Transcription factor activity profiles (_nca labeled genes,) followed by the cangidate regualtors, and then finally the targets. The Range of display favlues for each example is tunable with the <strong>TFA range</strong> and <strong>Expression range</strong> option respectively. Additionally the network edges are shown to the left of the heat map.</p>
+<p>Below is the srbA module expression heatmap. The following parameters were used: - <strong>TFA color palette</strong>: PiYG<br>
+- <strong>TFA Range</strong>: (-2, 2)<br>
+- <strong>Expression color palette</strong>: RdBu<br>
+- <strong>Expression Range</strong>: (-5, 5)<br>
+- <strong>Edge color by</strong>: correlation<br>
+- <strong>Edge color palette</strong>: RdBu</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="Help_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="768"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+<section id="what-is-merlin" class="level1">
+<h1>What is MERLIN</h1>
+<p>Merlin (Modular regulatory network learning with per gene information) is a computational algorithm that attempts to learn a gene regulatory network that best predicts the observed gene expression. The goal of the algorithm is to learn connection between regulators (transcription factors or other signaling encoded signaling proteins) and their target genes. To accomplish this task MERLIN builds a probabilistic graphical model which maximizes the likelihood of observing the expression data given the network structure. This is done through a greedy expectation maximization algorithm which takes a random initialization, learns distributional parameters that best describe the data, and updates iteratively until it converges to an optimal solution. For more details see the original MERLIN paper <a href="https://doi.org/10.1371/journal.pcbi.1003252" title="Named link title">Roy et al., PLOS Computational Biology, 2013</a>.</p>
+<section id="merlin-is-a-module-constrained-network" class="level2">
+<h2 class="anchored" data-anchor-id="merlin-is-a-module-constrained-network">MERLIN is a module constrained network</h2>
+<p>Network structure prediction algorithms fall into two broad classes, per-gene and per-module algorithms. A per-gene algorithm attempts to predict regulators for each gene independently. These algorithms are powerful because they give high resolution predictions. However, given the limitations of inferring regulatory networks from data, these algorithms can produce many spurious regulatory relationships and are prone to producing false relationships. Per-module networks attempt to correct for this. Instead of learning relationships for each gene, genes are grouped into sets called modules. Regulators for each module are learned simultaneously and all genes within a module are assumed to have the same set of regulators. This technique allows the algorithm to leverage more information when making regulatory predictions but lead to lower resolution networks. In comparison to the other two methods, MERLIN falls somewhere in the middle and is considered a module constrained network. In a module constrained network, groups of genes are still clustered together into modules but regulators are learned on a per gene bases. MERLIN makes use of the module structure by encouraging a common set of regulators for genes within the same module however if the relationship between a regulator and a target is not predictive of a genes expression than the regulatory relationship is not formed. Similarly MERLIN allows for the detection of co-regulatory relationships where a particular gene may be regulated by a key module regulator and also a second regulatory factor that is gene specific.</p>
+</section>
+<section id="estimating-confidence-of-merlin-predictions" class="level2">
+<h2 class="anchored" data-anchor-id="estimating-confidence-of-merlin-predictions">Estimating confidence of MERLIN predictions</h2>
+<p>MERLIN learns a graphical model in greedily. This means that the optimal solution found by MERLIN may not be the absolute optimum. In fact, learning network structure falls into a class of problems called NP hard. This means that there will likely never be an efficient algorithm to determine an absolute optimal network structure. Further, the output of MERLIN depends on the random initialization, i.e.&nbsp;how genes are grouped into modules. Given all of this inherit variability in our prediction algorithm its an important problem to try and say which of regulatory relationships are most supported by the data. We do this through a technique called bootstrapping which allows us to estimate the confidence of a learned relationship.Bootstrapping is a common statistical technique where a model is learned on a subset of data, and compared with other inferred models. In the case of MERLIN, we randomly sample multiple subsets of RNA-seq experiments, and infer a regulatory network each time using MERLIN. We then count the number of times each edge occurs in all of our inferred models and use this as a confidence estimation. In the case of GRAsp, we are showing all edges that have occurred in 80% or more of the models.</p>
+</section>
+<section id="what-is-the-difference-between-merlin-and-merlin-p-tfa" class="level2">
+<h2 class="anchored" data-anchor-id="what-is-the-difference-between-merlin-and-merlin-p-tfa">What is the difference between MERLIN and MERLIN-P-TFA?</h2>
+<p>While MERLIN was a strong start to inferring regulatory relationship, like many other algorithms the predicted regulatory relationships did not correspond well with true relationships derived experimentally (ChIP-seq or transcription factor KO experiments). To improve the consistency of the inferred MERLIN networks, we have implemented new algorithms called MERLIN-P and MERLIN-P-TFA which leverage additional information, improve the inference of a regulatory network. The P in MERLIN-P and MERLIN-P-TFA stands for prior. These models allow the user to incorporate transcription factor binding motif, additional chIP-seq data, and KO information into the network inference algorithm which improve consistency in the network inference results. The additional information is incorporated a known prior network where hypothesized or known regulatory relationships between regulators and their target genes are included. MERLIN then learns a new regulatory network an additional term that penalizes differences between the inferred regulatory network and the prior. For more information see the original MERLIN-P paper <a href="https://doi.org/10.1093/nar/gkw963" title="MERLIN-P">Siahpirani A. F. and Roy S., Nucleic Acids Res. 2017</a>. MERLIN-P-TFA takes the usage of prior information one step farther. It is well known that effects of transcription factors and their binding is not necessarily controlled by the level of active transcription of that particular transcription factor. Instead, additional factors such as phosphorylation events and ligand binding can play additional roles in the activity of transcription factors. These post transcriptional modification cannot directly be measured in RNA-seq data thus making it difficult to predict regulatory relationships.To combat this problem, MERLIN-P-TFA attempts to estimate transcription factor activity (TFA) using a method call network component analysis (NCA). The goal of this method is to use the prior network established from the additional data to infer if the regulator was active. This is done by trying to predict the expression of a gene using just the prior network. The result of this algorithm is a new profile for a subset of genes for which we have a critical threshold of prior information. This profile is an estimation of the regulators activity that is based on the data. MERLIN-P+TFA is currently unpublished but look for our paper soon.</p>
+<hr>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      // TODO in 1.5, we should make sure this works without a callout special case
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
