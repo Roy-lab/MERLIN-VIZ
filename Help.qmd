@@ -1,18 +1,22 @@
 ---
-title: "MERLIN-VIZ"
-subtitle: "An overview of MERLIN-VIZ and Introduction to GRAsp"
+title: "GRAsp"
+subtitle: "Gene Regulation of *Aspergillus fumigatus*"
 author: "Roy Lab"
-date: "May 23, 2025"
+version: "4.0"
 fontsize: 12pt
 
 format:
   html:
-    bootstrap-version: 3
-    toc: true
-    toc-depth: 2
-    toc-location: right
-    toc-expand: false
+    theme: Bootstrap
+    toc: true               # Include table of contents
+    toc-floating: true      # Floating TOC on the side
+    toc-depth: 3            # H1-H3 included
+
+resources:
+  - Data/1_1_AFUA_ortholog_mapping.txt
+  - Data/1_many_AFUA_orthology_relationships.txt
 ---
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -20,7 +24,6 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r, echo = FALSE, warning=FALSE, error=FALSE, include = FALSE}
 library(tidyverse)
-library(networkD3)
 library(DT)
 
 load('net_data.Rdata')
@@ -32,8 +35,6 @@ source('heatmap_printer.R')
 --- 
 
 # Overview
-This help document was originally written for the GRAsp (Gene Regulation of Aspergillus) instance of the MERLIN-VIZ project. All of the functionality of MERLIN-Viz is comparable across different instances. Please use this help document along with the [GRAsp website](https://grasp.wid.wisc.edu/) to better understand how to use this interactive tool. 
-
 GRAsp is a genome-wide gene-regulatory network that was inferred using the MERLIN-P-TFA package and visualized with the MERLIN-VIZ framework. Data was collected form publicly available RNA-seq data sets from multiple strains of *A. fumigatus* In each of these data sets a variety of different experimental conditions are observed e.g. exposure to drugs, signals, temperature change, pathogenesis etc. We normalized all data sets and then attempted to learn a regulatory network where we predict the expression of genes using the expression of transcription factors. For more information on the MERLIN inference algorithm see the section **What is MERLIN** below. We hope that this project provides new insight into the roles of transcription factors and improves general knowledge about *A. fumigatus*.    
 
 ---
@@ -65,7 +66,7 @@ GRAsp is a genome-wide gene-regulatory network that was inferred using the MERLI
 
 ---
 
-# How to use MERLIN-VIZ 
+# How to use GRAsp 
 MERLIN is a powerful technique for leveraging data from multiple sources and making global prediction of gene regulation. However, interpreting a global regulatory network is challenging due to the large number of predicted regulatory relationships. To overcome this challenge we have developed a visualization framework for our *A. fumigatus* network called GRAsp. GRAsp allows users to search the gene regulatory network to for network components that may be relevant to their research. Currently GRAsp supports searching the network via a list of genes, searching MERLIN modules, by GO-term, and using network diffusion. To toggle between these choices, select the corresponding search criteria in the **search method** dialog box. 
 
 
@@ -101,6 +102,7 @@ gg
 
 ```
 
+While GRAsp was designed specifically for the Af293 A. fumigatus strain, many of the predicted relationships may also be useful for understanding the CEA10 strain. To this end we have included 1-1 orthologs as searchable options in the **Gene List** search field. For example searching by *AFUB_018340*, the 1-1 ortholog of *srbA* will return the same network. 
 
 A **MERLIN module** is a collected on genes which are co-expressed and co-regulated. In the network visualization squared nodes correspond to transcriptional regulators and circular nodes correspond to targets. For example in the plot below, *srbA* and *srbB* represent two transcription factors. They are included in the set of candidate regulatory genes at the beginning of network inference. In comparison *erG25* *erG3* and *erG1* are not included in the set of candidate regulators because they do not have any known role in gene transcription regulation. They are each represented with rounded corners. Predicted regulatory relationships are captured with directed arrows. In the plot above *srbB* is a predicted regulator of *erG3*, *erG1* and *erG25*. It is also possible to have predicted regulatory relationships between regulators. In this case *srbA* and *srbB* co-regulate each other, which is represented by double sided arrow. 
 
@@ -386,8 +388,6 @@ To generate the AtfA diffusion results in the paper, we used the log fold change
 - **Edge color by** - Correlation
 - **Edge color palette** - RdBu
 
-
-
 ```{R  fig.height=6, fig.width=8, echo=FALSE, message=FALSE, warning=FALSE}
 score_list <- read_tsv(file = '../GRAspV3/Afua_sLCO_30_min_logFC_Rush.txt', col_names = c("feature", "score"))
 load('../GRAspV3/k10.Rdata')
@@ -425,7 +425,7 @@ gg
 
 ---
 
-## Nodes table 
+## Gene Table 
 GRAsp also provides a tabular view of the display data which may be useful for identify genes in the visualization field quickly. Information related to the gene can be viewed by clicking on the **Gene Table** tab above the visualization window. 
 
 - Gene Name - this is the systematic name of each gene. Each of these also acts as a hyperlink to  fungi-db page. 
@@ -433,6 +433,7 @@ GRAsp also provides a tabular view of the display data which may be useful for i
 - go - The gene ontology terms related to the gene of interest. 
 - Common Name - if there is a common gene name it is displayed here. Otherwise it is the systematic name. All names are based on the fungi-db database. There could be names that are missed due to fungi-db not being up to date. Also, sometimes a gene has two names due to being named by two different labs, e.g. FumR is also called FapR (the transcriptional regulatory of the fumagillin/pseurotin gene clusters).
 - Description - This is fungi-db description of the gene function. 
+- Orthologs - These are the CEA10 orthologs of each Af293 genes displayed in the network. A full list of orthologs is provided for each Af293 genes. Genes with a single ortholog (1-1 mapping) are searchable. 
 - neighbors - A list of genes that are connected to the gene listed under Gene Name. This is only as good as the latest analysis. It is helpful for you to do your own blast analysis.
 - degree - The number of genes in the neighbors list. 
 
@@ -537,9 +538,21 @@ gg <- makeSubgraphHeatmap(subNet,display_name = 1, edge_color_by = "Correlation"
 gg
 
 ```
- 
+
+# CAE10 Gene Orthologs
+GRAsp was designed for the Af293 strain. However, we have added some base functionality to support researches who prefer the CAE10 strain. First, we have prepared a list of 1-1 orthologs between the CAE10 and Af293 strains. CAE10 genes on the list are searchable through the **Gene List** search option. Most genes witihin the GRAsp network have a 1-1 ortholog in the CAE10 species (92%, 9078 1-1 orthologs). GRAsp currently does not provide support for searching by CAE10 genes which are not 1-1 orthologs, however a complete list of Af293 orthologs is included in the gene table. Additionally, the two buttons below will download the ortholog mapping used in GRASP. 
+
+
+<a href="Data/1_1_AFUA_ortholog_mapping.txt" download="1_1_AFUA_ortholog_mapping.txt" class="btn btn-primary">1-1 orthologs</a>
+
+<a href="Data/1_many_AFUA_orthology_relationships.txt" download="1_many_AFUA_ortholog_relationships.txt" class="btn btn-primary">1-many orthologs</a>
+
+## Orthology methodology 
+We utilized orthoFinder to identify the Af293 CAE10 orthologs. We downloaded the annotated protein sequence files for A. fumigatus A1163 (CAE10) and Af293, (FungiDB version 68). We performed many-to-many alignment using the BLAST algorithm in orthoFinder. OrthoFinder  constructed gene trees and orthogroups using its default algorithm. Species resolved gene trees, found in the resolved gene trees subdirectory, were processed such that branches containing at least from each species were identified as sub-orthogroups. 1-1 orthologs were defined as sub-orthogroups with exactly 1 gene from each species. 1-to-many orthogroups were identified using the entire set of sub-orthogroups. In the 1-to-many mapping, each Af293 gene was mapped to all CAE10 genes in the sub-orthogroup. 
+
+
 # What is MERLIN 
-Merlin (Modular regulatory network learning with per gene information) is a computational algorithm that attempts to learn a gene regulatory network that best predicts the observed gene expression. The goal of the algorithm is to learn connection between regulators (transcription factors or other signaling encoded signaling proteins) and their target genes. To accomplish this task MERLIN builds a probabilistic graphical model which maximizes the likelihood of observing the expression data given the network structure. This is done through a greedy expectation maximization algorithm which takes a random initialization, learns distributional parameters that best describe the data, and updates iteratively until it converges to an optimal solution. For more details see the original MERLIN paper [Roy et al., PLOS Computational Biology, 2013](https://doi.org/10.1371/journal.pcbi.1003252 "Named link title").
+Merlin (Modular regulatory network learning with per gene information) is a computational algorithm that attempts to learn a gene regulatory network that best predicts the observed gene expression. The goal of the algorithm is to learn connection between regulators (transcription factors or other signaling encoded signaling proteins) and their target genes. To accomplish this task MERLIN builds a probabilistic graphical model which maximizes the likelihood of observing the expression data given the network structure. This is done through a greedy expectation maximization algorithm which takes a random initialization, learns distributional parameters that best describe the data, and updates iteratively until it converges to an optimal solution. For more details see the original MERLIN paper [Roy et al., PLOS Computational Biology, 2013](https://doi.org/10.1371/journal.pcbi.1003252 "MERLIN").
 
 ## MERLIN is a module constrained network    
 Network structure prediction algorithms fall into two broad classes, per-gene and per-module algorithms. A per-gene algorithm attempts to predict regulators for each gene independently. These algorithms are powerful because they give high resolution predictions. However, given the limitations of inferring regulatory networks from data, these algorithms can produce many spurious regulatory relationships and are prone to producing false relationships. Per-module networks attempt to correct for this. Instead of learning relationships for each gene, genes are grouped into sets called modules. Regulators for each module are learned simultaneously and all genes within a module are assumed to have the same set of regulators. This technique allows the algorithm to leverage more information when making regulatory predictions but lead to lower resolution networks. In comparison to the other two methods, MERLIN falls somewhere in the middle and is considered a module constrained network. In a module constrained network, groups of genes are still clustered together into modules but regulators are learned on a per gene bases. MERLIN makes use of the module structure by encouraging a common set of regulators for genes within the same module however if the relationship between a regulator and a target is not predictive of a genes expression than the regulatory relationship is not formed. Similarly MERLIN allows for the detection of co-regulatory relationships where a particular gene may be regulated by a key module regulator and also a second regulatory factor that is gene specific. 
