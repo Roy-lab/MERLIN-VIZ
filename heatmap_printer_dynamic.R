@@ -11,8 +11,8 @@ library(plotly)
 
 makeSubgraphHeatmapDynamic <- function(subNet,
                                 display_name = 1, 
-                                #edge_color_by = NA, 
-                                #edge_color_palette = "RdBu", 
+                                edge_color_by = NA, 
+                                edge_color_palette = "RdBu", 
                                 font_size = 18, 
                                 direction = 1, 
                                 expression_color_palette = "RdBu", 
@@ -58,7 +58,7 @@ makeSubgraphHeatmapDynamic <- function(subNet,
     ggNCA <- ggplot(subset, 
                     aes(x = expression_id, y = !!sym_node_name_by, fill = expression)) + 
       geom_tile() + 
-      scale_fill_distiller(palette = tfa_color_palette, direction = direction, 
+      scale_fill_distiller(palette = tfa_color_palette, direction = -1, 
                            limits = scale_tfa_colors, oob = scales::squish, name = "TFA") + 
       scale_x_discrete(expand = c(0,0)) + 
       scale_y_discrete(expand = c(0,0)) + 
@@ -90,7 +90,7 @@ makeSubgraphHeatmapDynamic <- function(subNet,
     ggReg <- ggplot(subset, 
                     aes(x = expression_id, y = !!sym_node_name_by, fill = expression)) + 
       geom_tile() + 
-      scale_fill_distiller(palette = expression_color_palette, direction = direction, 
+      scale_fill_distiller(palette = expression_color_palette, direction = -1, 
                            limits = scale_expression_colors, oob = scales::squish) + 
       scale_x_discrete(expand = c(0,0)) + 
       scale_y_discrete(expand = c(0,0)) + 
@@ -121,7 +121,7 @@ makeSubgraphHeatmapDynamic <- function(subNet,
     ggTar <- ggplot(subset, 
                     aes(x = expression_id, y = !!sym_node_name_by, fill = expression)) + 
       geom_tile() + 
-      scale_fill_distiller(palette = expression_color_palette, direction = direction, 
+      scale_fill_distiller(palette = expression_color_palette, direction = -1, 
                            limits = scale_expression_colors, oob = scales::squish) + 
       scale_x_discrete(expand = c(0,0)) + 
       scale_y_discrete(expand = c(0,0)) + 
@@ -182,41 +182,41 @@ makeSubgraphHeatmapDynamic <- function(subNet,
     )
   )
   
-  #row_coords <- lapply(seq_along(num_genes_list), function(i){ 
-  #  y_domain <- gg$x$layout[[paste0("yaxis", ifelse(i==1,"",i))]]$domain
-  #  n_rows <- num_genes_list[[i]]
+  row_coords <- lapply(seq_along(num_genes_list), function(i){ 
+    y_domain <- gg$x$layout[[paste0("yaxis", ifelse(i==1,"",i))]]$domain
+    n_rows <- num_genes_list[[i]]
     
     # Compute the edges of each row
-  #  edges <- seq(y_domain[1], y_domain[2], length.out = n_rows + 1)
+    edges <- seq(y_domain[1], y_domain[2], length.out = n_rows + 1)
     
     # Midpoint of each row = average of top and bottom edge
-  #  midpoints <- (edges[-1] + edges[-length(edges)]) / 2
-  #  rev(midpoints)
-  #})
+    midpoints <- (edges[-1] + edges[-length(edges)]) / 2
+    rev(midpoints)
+  })
   
-  #row_coords <- unlist(row_coords)
+  row_coords <- unlist(row_coords)
   
   
-  #gene_order <- fct_c(fct_rev(nca_gene_order), fct_rev(reg_gene_order), fct_rev(tar_gene_order))
+  gene_order <- fct_c(fct_rev(nca_gene_order), fct_rev(reg_gene_order), fct_rev(tar_gene_order))
   
   ## Set up network visualization 
-  #subNet <- subNet  %N>% mutate(feature = factor(feature, levels(gene_order))) %>% 
-  #  arrange(feature) %>%  
-  #  mutate(`Common Name` = factor(`Common Name`, levels = `Common Name`)) %>% 
-  #  mutate(y = row_coords) %E>%
-  #  mutate(x = 0, xend = 0, y = .N()$y[to], yend = .N()$y[from])
-
-  #if(node_name_by == "Common Name"){
-  #  subNet <- subNet %E>% 
-  #    mutate(edge_name = sprintf('%s -> %s', .N()$`Common Name`[from], .N()$`Common Name`[to]))
-  #}else {
-  #  subNet <- subNet %E>% 
-  #    mutate(edge_name = sprintf('%s -> %s', .N()$feature[from], .N()$feature[to]))
-  #}
+  # subNet <- subNet  %N>% mutate(feature = factor(feature, levels(gene_order))) %>% 
+  #   arrange(feature) %>%  
+  #   mutate(`Common Name` = factor(`Common Name`, levels = `Common Name`)) %>% 
+  #   mutate(y = row_coords) %E>%
+  #   mutate(x = 0, xend = 0, y = .N()$y[to], yend = .N()$y[from])
+  # 
+  # if(node_name_by == "Common Name"){
+  #   subNet <- subNet %E>% 
+  #     mutate(edge_name = sprintf('%s -> %s', .N()$`Common Name`[from], .N()$`Common Name`[to]))
+  # }else {
+  #   subNet <- subNet %E>% 
+  #     mutate(edge_name = sprintf('%s -> %s', .N()$feature[from], .N()$feature[to]))
+  # }
   
   
   #edges <- subNet %E>% 
-  # as_tibble()
+  #  as_tibble()
   
   #arc_list <- lapply(seq_len(nrow(edges)), function(i){
   #  arc <- create_arc(edges$x[i], edges$y[i], edges$xend[i], edges$yend[i])
@@ -229,50 +229,50 @@ makeSubgraphHeatmapDynamic <- function(subNet,
   #zmin <- min(edges[[sym_edge_color_by]])
   #zmax <- max(edges[[sym_edge_color_by]])
   
-  #p <- plot_ly()
-  #for(i in seq_len(nrow(edges))) {
-  #  arc <- create_arc(edges$x[i], edges$y[i], edges$xend[i], edges$yend[i])
-    
-    # Map value to a color in a palette
-  #  color <- scales::col_numeric(edge_color_palette, domain = c(zmin, zmax), reverse = direction == 1)(edges[[sym_edge_color_by]][i])
-    
-  #  if (edge_color_by == "Correlation"){
-  #    l <- "Correlation"
-  #  }else{
-  #    l <- "Reg Weight"
-  #  }
-  #  hover_text <- paste0(edges$edge_name[i], "<br>", l, ": ", sprintf('%.03f', (edges[[sym_edge_color_by]][i])))
-    
-  #  p <- add_trace(
-  #    p,
-  #    x = arc$x,
-  #    y = arc$y,
-  #    type = "scatter",
-  #    mode = "lines",
-  #    line = list(color = color, width = 2),
-  #    text = hover_text,
-  #    hoverinfo = "text",
-  #    showlegend = FALSE
-  #  )
-  #}
-  
-  #p <- p %>% layout(
-  #    xaxis = list(
-  #    range = c(0, 0.501),
-  #    showline = FALSE,
-  #    showticklabels = FALSE,
-  #    showgrid = FALSE,
-  #    zeroline = FALSE
-  #  ),
-  #  yaxis = list(
-  #    range = c(0, 1),
-  #    autorange = FALSE,
-  #    showline = FALSE,
-  #    showticklabels = FALSE,
-  #    showgrid = FALSE,
-  #    zeroline = FALSE
-  #  )
-  #)
+  # p <- plot_ly()
+  # for(i in seq_len(nrow(edges))) {
+  #   arc <- create_arc(edges$x[i], edges$y[i], edges$xend[i], edges$yend[i])
+  #   
+  #   # Map value to a color in a palette
+  #   color <- scales::col_numeric(edge_color_palette, domain = c(zmin, zmax), reverse = direction == 1)(edges[[sym_edge_color_by]][i])
+  #   
+  #   if (edge_color_by == "Correlation"){
+  #     l <- "Correlation"
+  #   }else{
+  #     l <- "Reg Weight"
+  #   }
+  #   hover_text <- paste0(edges$edge_name[i], "<br>", l, ": ", sprintf('%.03f', (edges[[sym_edge_color_by]][i])))
+  #   
+  #   p <- add_trace(
+  #     p,
+  #     x = arc$x,
+  #     y = arc$y,
+  #     type = "scatter",
+  #     mode = "lines",
+  #     line = list(color = color, width = 2),
+  #     text = hover_text,
+  #     hoverinfo = "text",
+  #     showlegend = FALSE
+  #   )
+  # }
+  # 
+  # p <- p %>% layout(
+  #   xaxis = list(
+  #     range = c(0, 0.501),
+  #     showline = FALSE,
+  #     showticklabels = FALSE,
+  #     showgrid = FALSE,
+  #     zeroline = FALSE
+  #   ),
+  #   yaxis = list(
+  #     range = c(0, 1),
+  #     autorange = FALSE,
+  #     showline = FALSE,
+  #     showticklabels = FALSE,
+  #     showgrid = FALSE,
+  #     zeroline = FALSE
+  #   )
+  # )
   
   #gg_combine <- plotly::subplot(gg,
   #                p, 

@@ -105,7 +105,7 @@ geneList_checkBox <- function(){
       )
     ),
     choices = c("Show Neighbors" = "neigh", "Include Module Members" = "mod", "Create Steiner Tree" = "stein"), #CC: Changed to more descriptive titles
-    selected = c("neigh")
+    selected = c("mod")
   )
 }
 
@@ -315,7 +315,7 @@ networkViz_nameFormat_Radio <- function(){
 
 ### Name Position Bool -----
 networkViz_namePositionBool_checkBox <- function(){
-  checkboxInput(inputId = 'print_name_bool', label = "Name in node", value = FALSE)
+  checkboxInput(inputId = 'print_name_bool', label = "Name in node", value = TRUE)
 }
 
 ### Name Nudge Y Slider -----
@@ -365,7 +365,7 @@ networkViz_nameAngle_Slider <- function(){
 ### Node Color Radio -----
 networkViz_nodeColor_Radio <- function(){
   radioButtons(inputId = "print_group_by",
-               choices = list ("Expression" = "exp", "Module" = 'module', "Regulator" = "regulator"), selected =  'exp', 
+               choices = list ("Module" = 'module', "Regulator" = "regulator"), selected =  'module', 
                label = tags$div(
                  style = "display: flex; align-items: center;",
                  tags$h4("Node color by"),
@@ -383,6 +383,27 @@ networkViz_nodeColor_Radio <- function(){
                    )
     )))
 }
+
+networkViz_sampleSelect_Tag <- function(){
+  tags$div(
+    style = "display: flex; align-items: center;",
+    tags$h4("Select Sample"),
+    tags$div(
+      style = "margin-left: 1px;", # CC: moved make the icon and the label closer
+      bsButton("select_sample", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+      bsPopover("select_sample", "Additional Info",
+                "Select Sample and cell type of interest. If the All cells checkbox is checked, all expression data is used to compute correlation expression weight, and mean. Otherwise these values are specific to the subset of cells",
+                placement = "right",
+                options = list(
+                  container = "body",
+                  html = TRUE,
+                  template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                )
+      )
+    )
+  )
+}
+
 
 ### Node Node Expression Global Checkbox -----
 networkViz_nodeExpGlobal_Checkbox <- function(){
@@ -481,9 +502,11 @@ networkViz_nodeColor_Select<- function(palettes_nodes){
                 )))
 }
 
+
+
 ### Node max size slider -----
 networkViz_nodeSize_Slider <- function(){
-  sliderInput(inputId = 'print_max_node_size', value = 8, min = 1, max = 25, 
+  sliderInput(inputId = 'print_max_node_size', value = 5, min = 1, max = 25, 
               label = tags$div(
                 style = "display: flex; align-items: center;",
                 tags$h4("Node size"),
@@ -504,7 +527,7 @@ networkViz_nodeSize_Slider <- function(){
 
 ### Node font size slider -----
 networkViz_nodeFontSize_Slider <- function(){
-  sliderInput(inputId = 'print_font_size', value = 8, min = 1, max = 25, 
+  sliderInput(inputId = 'print_font_size', value = 5, min = 1, max = 25, 
               label = tags$div(
                 style = "display: flex; align-items: center;",
                 tags$h4("Node label font size"),
@@ -562,7 +585,7 @@ networkViz_edgeRangeReg_Slider <- function(){
                   html = TRUE,
                   template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
                 )
-      ))), min = -10, max = 10, value = c(-5,5), step = 0.1)
+      ))), min = -10.0, max = 10.0, value = c(-5, 5), step = 0.01)
 }
 
 ### Edge color range correlation slider -----
@@ -600,7 +623,7 @@ networkViz_edgeRangeAbsCorr_Slider <- function(){
                   html = TRUE,
                   template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
                 )
-      ))), min = 0, max = 4, value = 1, step = 0.1)
+      ))), min = 0, max = 10, value = 3, step = 0.1)
 }
 
 ### Edge width slider ----- 
@@ -710,7 +733,7 @@ networkViz_legendSize_Slider <- function(){
                   html = TRUE,
                   template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
                 )
-      ))), min = 0, max = 25, value = 18, step = 1)
+      ))), min = 0, max = 25, value = 12, step = 1)
 }
 
 
@@ -781,7 +804,7 @@ networkViz_imageName_Text <- function(){
 }
 
 ### Image file type select -------
-networkViz_imageType_Select <- function(){
+networkViz_fileType_Select <- function(){
   selectInput("print_file_type", "File format:",
               choices = c("PNG" = "png", "PDF" = "pdf", "SVG" = "svg"),
               selected = "png")
@@ -823,7 +846,7 @@ heatmapViz_nameFormat_Radio <- function(){
 
 ### Heatmap TFA color palette -----
 heatmapViz_TFAPalette_Select <- function(palettes_edges){
-  selectInput(inputId = 'tfa_palette_heatmap', choices = palettes_edges$pal, multiple = FALSE, selected = default_tfa_palette_heatamp,
+  selectInput(inputId = 'tfa_palette_heatmap', choices = palettes_edges$pal, multiple = FALSE, selected = default_tfa_palette_heatmap,
               label = tags$div(
                 style = "display: flex; align-items: center;",
                 tags$h4("TFA color palette"),
@@ -1033,7 +1056,7 @@ heatmapViz_fontSize_Slider <- function(){
                   html = TRUE,
                   template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
                 )
-      ))), min = 0, max = 25, value = 18, step = 1)
+      ))), min = 0, max = 25, value = 12, step = 1)
 }
 
 ### Heatmap image height slider -----
@@ -1102,7 +1125,7 @@ heatmapViz_fileName_Text <- function(){
 
 ### heatmap file type select ----
 heatmapViz_fileType_Select <- function(){
-  selectInput("print_file_type", "File format:",
+  selectInput("print_file_type_2", "File format:",
               choices = c("PNG" = "png", "PDF" = "pdf", "SVG" = "svg"),
               selected = "png")
 }

@@ -4,42 +4,39 @@ library(pracma)
 library(DT)
 
 
-### Files used for netData generation. 
-prefix <- "/Volumes/"
-all_nodes_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/data/katie_t_cells/genes_filtered.txt", sep = "")
-edge_list_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/network_0.8.txt", sep = "")
-module2gene_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/consensus_module_0.1_geneset.txt", sep = "")
-module_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/consensus_module_0.1_geneset_enrichAnalyzer.txt", sep = "")
-go_file = paste(prefix, "wid/projects2/Roy-common/data/data_new/human/go/hg38/hg38_goterms_regnet.txt", sep = "")
-regulator_enrich_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/regulator_enrichAnalysis_0.1_details.txt", sep = "")
-go_enrich_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/enrichAnalysis_0.1_details.txt", sep = "")
-gene2genename_file <- NA
-gene_desc_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/data/gene_annotations/gene_names.txt", sep = "")
-regulator_list_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/data/katie_t_cells/regulators_intersected_with_transgene.txt", sep = "")
-expression_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/data/katie_t_cells/expression_geneids_subset_filtered_barcodes_transposed.txt", sep = "")
+
+#all_nodes_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_nodes.txt"
+#edge_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/output_net_0_8.txt"
+#module2gene_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset.txt"
+#module_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset_enrichAnalyzer.txt"
+#go_file = "/Volumes/wid/projects7/Roy-Aspergillus/Data/GeneOntology/GO_enrichAnalyzer_idx_v2/afumgotermap.txt"
+#regulator_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments_v2/merlin.0_8.0_3_details.txt"
+#go_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments_v2/go.0_3_details.txt"
+#gene2genename_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_name_map_nancy.txt"
+#gene_desc_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_description_file.txt"
+#regulator_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_transcription_factors.tsv"
+#expression_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_expression_T_allLabels.txt" 
+#Ortholog_1_to_1_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/aspergillus_orthofinder_results/Results_Sep04/scraped_orthogroups/1_1_AFUA_ortholog_mapping.txt"
+#Ortholog_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/aspergillus_orthofinder_results/Results_Sep04/scraped_orthogroups/1_many_AFUA_orthology_relationships.txt"
 
 
-################### MERLIN_VIZ DEFAULTS FOR SCALES #############################
-title <- "Katie T-cell"
 default_edge_color_pallette <- "RdBu"
-default_node_color_pallette <- "Reds"
-default_gene <- "AACS"
-default_expression_heatmap <- "Reds"
-default_expression_range <- c(0, 5)
-default_expression_min <- 0
-default_expression_max <- 10
-default_tfa_palette_heatamp <- "PiYG"
-default_tfa_range <- c(-2, 2)
-default_tfa_min <- -10
-default_tfa_max <- 10
-
-
+default_tfa_palette_heatmap <- "PiYG"
+default_exp_palette_heatmap <- "RdBu"
+default_node_color_pallette <- "Set2"
+default_expression_heatmap <- "RdBu"
+default_tfa_min <- -2
+default_tfa_max <- 2
+default_tfa_range<- c(-2, 2)
+default_expression_min <- -5
+default_expression_max <- 5
+default_expression_range <- c(-2, 2)
 ################### Make R Data Files *Only need to run once###################
 makePostProcessDataStruct <- function (all_nodes_file, edge_list_file,
                           module2gene_file, go_file, module_file, 
                           regulator_enrich_file, go_enrich_file, 
                           Ortholog_1_to_1_file, Ortholog_file, 
-                          gene2genename_file, gene_desc_file, regulator_list_file, expression_file, max_samps = 5000)
+                          gene2genename_file, gene_desc_file, regulator_list_file, expression_file)
 {
 ###### Generate labeled Node Set
 genes2modules <- read_tsv(module2gene_file, c("feature", "module"))
@@ -51,9 +48,9 @@ genes2modules <- genes2modules %>%
   filter(count > 4) %>%
   select(feature, module)
 
-go <- read_tsv(go_file, col_names = c("feature", "go"), skip = 1) %>% 
-  #rename("feature"= "GeneName") %>% 
-  #rename("go" = "GOTerm") %>% 
+go <- read_tsv(go_file, col_names = TRUE) %>% 
+  rename("feature"= "GeneName") %>% 
+  rename("go" = "GOTerm") %>% 
   select(feature, go)
 
 go_IC <- go %>% 
@@ -73,41 +70,40 @@ regulators <- read_tsv(regulator_list_file, col_names = FALSE) %>%
   rename("feature" = "X1") %>%
   mutate(regulator = TRUE)
 
-#gene_map <- read_tsv(gene2genename_file, col_names = FALSE) %>%
-#  rename("feature" = "X1", "Common Name" = "X2")
 
-gene_desc <- read_tsv(gene_desc_file, col_names = c("feature", "Description")) 
 
-### Ortholog support
-# ortholog_1_to_1 <- read_tsv(Ortholog_1_to_1_file, col_names = c("feature", "Ortholog 1-1")) %>% 
-#   distinct()
-# 
-# ortholog <- read_tsv(Ortholog_file, col_names = c("feature", "Orthologs")) %>% 
-#   distinct()
-# 
-# ortholog_nca <- ortholog %>%
-#   mutate(
-#     feature = str_c(feature, 'nca', sep = '_'),
-#     Orthologs = map_chr(str_split(Orthologs, ', '), ~ paste0(.x, "_nca") %>% paste(collapse = ", "))
-# )
-# 
-# ortholog_1_to_1_nca <- ortholog_1_to_1 %>% 
-#   mutate(feature = str_c(feature, 'nca', sep = '_')) %>% 
-#   mutate(`Ortholog 1-1`= str_c(`Ortholog 1-1`, 'nca', sep = '_'))
+gene_map <- read_tsv(gene2genename_file, col_names = FALSE) %>%
+  rename("feature" = "X1", "Common Name" = "X2")
 
-# ortholog <- bind_rows(ortholog, ortholog_nca)
-# ortholog_1_to_1 <- bind_rows(ortholog_1_to_1, ortholog_1_to_1_nca)
+gene_desc <- read_tsv(gene_desc_file, col_names = c("feature", "Description")) #%>%
+ortholog_1_to_1 <- read_tsv(Ortholog_1_to_1_file, col_names = c("feature", "Ortholog 1-1")) %>% 
+  distinct()
+
+ortholog <- read_tsv(Ortholog_file, col_names = c("feature", "Orthologs")) %>% 
+  distinct()
+
+ortholog_nca <- ortholog %>%
+  mutate(
+    feature = str_c(feature, 'nca', sep = '_'),
+    Orthologs = map_chr(str_split(Orthologs, ', '), ~ paste0(.x, "_nca") %>% paste(collapse = ", "))
+)
+
+ortholog_1_to_1_nca <- ortholog_1_to_1 %>% 
+  mutate(feature = str_c(feature, 'nca', sep = '_')) %>% 
+  mutate(`Ortholog 1-1`= str_c(`Ortholog 1-1`, 'nca', sep = '_'))
+
+ortholog <- bind_rows(ortholog, ortholog_nca)
+ortholog_1_to_1 <- bind_rows(ortholog_1_to_1, ortholog_1_to_1_nca)
   
 nodes <- read_tsv(file = all_nodes_file, col_names = "feature") %>% 
           rowid_to_column("id") %>%
           left_join(genes2modules) %>%
           left_join(go) %>%
-          #left_join(gene_map) %>%
+          left_join(gene_map) %>%
           left_join(gene_desc) %>%
           left_join(regulators) %>% 
-          mutate(`Common Name` = feature)
-          #left_join(ortholog_1_to_1) %>% 
-          #left_join(ortholog)
+          left_join(ortholog_1_to_1) %>% 
+          left_join(ortholog)
 
 nodes$regulator <- sapply(nodes$regulator, function(x){ifelse(is.na(x), 'tar', 'scr')})
 nodes$module <- sapply(nodes$module, function(x){ifelse(is.na(x), -9999, x)})
@@ -132,7 +128,11 @@ feature_name = gene_map$feature
 genename_map <- tibble(common_name, feature_name)
 
 ## load in Expression matrix 
-load('~/katie_expression_mat_grouped.Rdata')
+expression <- read_tsv(expression_file) %>% 
+  pivot_longer(cols = !Gene) %>% 
+  group_by(Gene) %>%
+  dplyr::summarize(expression = list(setNames(value, name)))
+
 
 ### Generate Edge Set
 routes <- read_tsv(edge_list_file, c("source", "target", "weight"))
@@ -150,63 +150,32 @@ edges <- edges %>%
 ### Make Tidy Graph Structure 
 Net <- tbl_graph(nodes= nodes, edges = edges)
 Net <- Net %>%
+  #convert(to_undirected) %>%
   mutate(neighbors = map_local(order = 1, .f = function(neighborhood, node, ...) {
          as_tibble(neighborhood, active = 'nodes')$feature
       }))
 degree_v <-  Net %N>% as_tibble() %>% rowwise() %>% summarize(length(neighbors)) -1
 Net <- Net %>% mutate(degree = degree_v$`length(neighbors)`)
 
-Net <- Net %N>% 
-  group_by(feature) %>% 
-  mutate(expression = list(mean_mat_matrix_grouped[feature, ])) %>% 
-  ungroup()
+Net <- left_join(Net, expression, by = c("feature" = "Gene"))
 
-
-### load in entire matrix
-load('~/katie_expression_all_data.Rdata')
-cells <- colnames(all_dat)[2:length(colnames(all_dat))]
-cluster <- str_split_i(cells, '-', 1)
-samples <- str_split_i(str_split_i(cells, '_', 1), '-', 2)
-group = ifelse(str_detect(samples, "^RV"), "RV",
-        ifelse(str_detect(samples, "^NV") & !str_detect(samples, "mCh|mCH"), "NV",
-        ifelse(str_detect(samples, "mCh|mCH"), "mCH",
-        ifelse(str_detect(samples, "^UT"), "UT", NA_character_))))
-# Turn into matrix
-gene_names <- all_dat$Gene
-all_dat <- as.matrix(all_dat[, -1, with = FALSE])
-rownames(all_dat) <- gene_names # Turn into matrix
-cell_idx <- sort(sample(ncol(all_dat), 10000))
-
-group <- group[cell_idx]
-cluster <- cluster[cell_idx]
-                   
-Net <- Net %N>% 
-  group_by(feature) %>% 
-  mutate(full_exp = list(all_dat[feature, cell_idx])) %>% 
-  ungroup()
-
-## Add Correlation
+## add correlation between expression vectors for all edges
 Net <- Net %E>% 
-  mutate(Correlation = map2_dbl(.N()$full_exp[from], .N()$full_exp[to], ~ cor(.x, .y))) %>% 
-  mutate(Reg_weight = map2_dbl(.N()$full_exp[from], .N()$full_exp[to], ~ coef(lm(.y ~ .x))[2])) 
+  mutate(Correlation = map2_dbl( 
+    .N()$expression[from],
+    .N()$expression[to], 
+     ~ cor(.x, .y))
+    ) 
 
-for(c in unique(cluster)){
-  for(g in unique(group)){
-    idx <- which(c == cluster & g == group)
-    C_name <- paste0(c, "-", g, "_", "Correlation")
-    R_name <- paste0(c, "-", g, "_", "Reg_weight")
-    sprintf('%s %s', C_name, R_name)
-    Net <- Net %E>% 
-      mutate(!!C_name := map2_dbl(.N()$full_exp[from], .N()$full_exp[to], ~ cor(.x[idx], .y[idx]))) %>% 
-      mutate(!!R_name := map2_dbl(.N()$full_exp[from], .N()$full_exp[to], ~ coef(lm(.y[idx] ~ .x[idx]))[2]))
-  }
-}
 
-Net <- Net %N>%  
-  group_by(feature) %>% 
-  mutate(mean_expression =mean(unlist(full_exp))) 
-
-Net <- Net %N>% select(!full_exp) 
+## Add regression weights between all edges.   
+Net <- Net %E>%
+  mutate(Reg_weight = map2(
+    .N()$expression[from], 
+    .N()$expression[to], 
+    ~ coef(lm(.y ~ .x))[[2]] ## just weight not intercept.
+  )) %>% 
+  mutate(Reg_weight = unlist(Reg_weight))
 
 ### Generate Module Structure 
 Module <- read_tsv(module_file, c("module", "gene_list"))  
@@ -313,7 +282,7 @@ searchForGene <-function(Net,Module, gene){
   genes <- append(unlist(genes), unlist(unlist(neighbors)))
   print(unique(genes))
   return(unique(genes))
-} 
+}
 
 searchForGeneList <-function(Net, Module, gene_list, search_additional){
   result_list <- Net %N>%
