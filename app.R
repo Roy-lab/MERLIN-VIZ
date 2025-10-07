@@ -27,7 +27,11 @@ source('ui_items.R')
 
 ## Initialize global variables ----
 all_gene_names <- unique(c(genes, genename_map$common_name))
-palettes_nodes<- tibble(rownames_to_column(brewer.pal.info, var = 'pal')) 
+palettes_nodes<- tibble(rownames_to_column(brewer.pal.info, var = 'pal'))
+palettes_nodes_quant <- tibble(rownames_to_column(brewer.pal.info, var = 'pal')) %>% 
+  filter(category %in% c('div', 'seq'))
+palettes_nodes_qual <- tibble(rownames_to_column(brewer.pal.info, var = 'pal')) %>% 
+  filter(category == "qual")
 palettes_edges <- tibble(rownames_to_column(brewer.pal.info, var = 'pal')) %>% 
   filter(category %in% c("div", "seq"))
 igraph_layout <- c('Fruchterman-Reingold'='nicely', 'Davidson-Harel'='dh', 'Kamada-Kawai'='kk', 'Large graph layout'= 'lgl') #'Force directed' = 'drl')
@@ -107,24 +111,26 @@ ui <- navbarPage(title,
                                        networkViz_nameAngle_Slider(),
                                      )
                               ),
-                              
+                              column(2,
+                                     networkViz_sampleSelect_Tag(),
+                                     networkViz_nodeExpGlobal_Checkbox(),
+                                     conditionalPanel(condition = "input.global == false",
+                                                      networkViz_dispCluster_Select(cluster), 
+                                                      networkViz_dispType_Select(type),
+                                     ),
+                              ),
                               ### Node visualization settings --------
                               column(2,
                                      networkViz_nodeColor_Radio(), 
-                                     conditionalPanel(condition = "input.print_group_by == 'exp'",
-                                        networkViz_nodeExpGlobal_Checkbox(),
-                                        conditionalPanel(condition = "input.global == false", 
-                                            networkViz_dispCluster_Select(cluster), 
-                                            networkViz_dispType_Select(type),
-                                        ),
-                                        networkViz_expColor_Slider()
+                                     conditionalPanel(condition = "input.print_group_by == 'exp' || input.print_group_by == 'module'",
+                                                      networkViz_expColor_Slider(),
+                                                      networkViz_nodeColor_Select(palettes_nodes)
                                      ),
-                                     networkViz_nodeColor_Select(palettes_nodes),
                                      networkViz_nodeSize_Slider(),
                                      networkViz_nodeFontSize_Slider()
                               ),
                               
-                              ### Edge visualzation setting ------
+                              ### Edge visualization setting ------
                               column(2,
                                      # Removing this and having correlation scale width
                                      # networkViz_edgeColor_Radio(),
@@ -254,6 +260,21 @@ server <- function(input, output, session) {
   ## Dynamic selectize update ----
   updateSelectizeInput(session, 'gene', choices = all_gene_names, server = TRUE)
   updateSelectizeInput(session, 'gl', choices = all_gene_names, selected = default_gene, server = TRUE)
+  
+  
+  ## update color palettes ---- 
+  observeEvent(input$print_group_by, {
+    
+    if(input$print_group_by == "exp"){
+      updateSelectInput(session, "print_node_pal",
+                        choices = palettes_nodes_quant$pal,
+                        selected = default_node_color_quant_pallette)
+    } else if(input$print_group_by == "module"){
+      updateSelectInput(session, "print_node_pal",
+                        choices = palettes_nodes_qual$pal,
+                        selected = trimws(default_node_color_qual_pallette))
+    }
+  })
   
   
   ## Dynamic Variables ------
@@ -564,21 +585,28 @@ server <- function(input, output, session) {
       subNet <- subNet %N>% filter(component %in% keep_component )
       
       ## Set up a block that is used to select correct feature
+      ##### Node color by ----
       if(input$print_group_by== "exp"){
         if(input$global){
-          edge_color_by <- 'Reg_weight'
-          edge_width_by <- 'Correlation'
           node_color_by <- "mean_expression"
-        }else
-        {
+        }else{
           cluster_sample_string <- paste(input$disp_cluster, input$disp_type, sep = '-')
           subNet <- subNet %N>% mutate(exp = map_dbl(expression, ~ .x[cluster_sample_string]))
-          edge_color_by <- paste(cluster_sample_string, 'Reg_weight', sep = '_')
-          edge_width_by <- paste(cluster_sample_string, 'Correlation', sep = '_')
           node_color_by <- "exp"
         }
       }else{
         node_color_by <- input$print_group_by
+      }
+      
+      ##### Edge color by ------
+      if(input$global){
+        edge_color_by <- 'Reg_weight'
+        edge_width_by <- 'Correlation'
+      }else
+      {
+        cluster_sample_string <- paste(input$disp_cluster, input$disp_type, sep = '-')
+        edge_color_by <- paste(cluster_sample_string, 'Reg_weight', sep = '_')
+        edge_width_by <- paste(cluster_sample_string, 'Correlation', sep = '_')
       }
       
       if(!is.null(input$print_disp_names)){

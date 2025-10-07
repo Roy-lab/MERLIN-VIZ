@@ -22,7 +22,6 @@ expression_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/je
 ################### MERLIN_VIZ DEFAULTS FOR SCALES #############################
 title <- "Katie T-cell"
 default_edge_color_pallette <- "RdBu"
-default_node_color_pallette <- "Reds"
 default_gene <- "AACS"
 default_expression_heatmap <- "Reds"
 default_expression_range <- c(0, 5)
@@ -32,7 +31,9 @@ default_tfa_palette_heatamp <- "PiYG"
 default_tfa_range <- c(-2, 2)
 default_tfa_min <- -10
 default_tfa_max <- 10
-
+default_node_color_pallette <- "Reds"
+default_node_color_qual_pallette <- "Set2"
+default_node_color_quant_pallette <- "Reds"
 
 ################### Make R Data Files *Only need to run once###################
 makePostProcessDataStruct <- function (all_nodes_file, edge_list_file,
@@ -757,11 +758,13 @@ prepNodeTable <- function(Nodes_Table, disp_num){
     }else{
       x <- x
     })), collapse = ' | ')) %>% 
+    select(!`Common Name`) %>% 
     select(!geneSuper) %>% 
     select(!expression) %>% 
-    select(!`Ortholog 1-1`) %>%
+    select(!mean_expression) %>%
+    #select(!`Ortholog 1-1`) %>%
     rename("Gene Name" = "feature") %>%
-    mutate("Gene Name" = sprintf('<a href="https://fungidb.org/fungidb/app/record/gene/%s" target="_blank" rel="noopener noreferrer"> %s</a>', str_replace(`Gene Name`, '_nca', ''), `Gene Name`)) %>%
+    mutate("Gene Name" = sprintf('<a href="https://www.ncbi.nlm.nih.gov/gene/?term=%s" target="_blank" rel="noopener noreferrer"> %s</a>', str_replace(`Gene Name`, '_nca', ''), `Gene Name`)) %>%
     mutate("id" = NULL) %>%
     mutate("regulator" = NULL)
   

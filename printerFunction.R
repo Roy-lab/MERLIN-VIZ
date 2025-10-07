@@ -4,6 +4,7 @@ library(tidyverse)
 library(tidygraph)
 library(RColorBrewer)
 library(ggpmisc)
+library(scales)
 
 makeSubNetGraph <- function(subNet,
                             names_in_nodes = FALSE, node_color_by = NA, 
@@ -56,7 +57,7 @@ makeSubNetGraph <- function(subNet,
   
   ## Edges display ---- 
   gg <- gg +
-      geom_edge_link(aes(color  = !!sym_edge_color_by, 
+      geom_edge_parallel(aes(color  = !!sym_edge_color_by, 
                          start_cap = label_rect(node1.display_name, fontsize = font_size), 
                          end_cap = label_rect(node2.display_name, fontsize =font_size), edge_width = abs(!!sym_edge_width_by)), 
                      arrow = arrow(angle = 15, ends ='last', length = unit(.5, "lines"), type = 'closed'), 
@@ -182,14 +183,14 @@ makeSubNetGraph <- function(subNet,
   
   ## Node size scale ----
   if(!is.na(node_size_by)){
-    gg <- gg + scale_size_continuous(range = c(1,max_node_size)) 
+    gg <- gg + scale_size_continuous(limits = c(0, NA), range = c(1,max_node_size), breaks = pretty_breaks(n=4))  
   }
   
   ## Node shape scale ----
   gg <- gg + scale_shape_manual(breaks = c('scr', 'tar'), values =c(23, 22))
   
   ## edge width scale -----
-  gg <- gg + scale_edge_width(limits = c(0, 1), range = c(0, max_edge_width), name = 'Absolute Correlation')
+  gg <- gg + scale_edge_width(limits = c(0, 1), range = c(0, max_edge_width), name = 'Absolute Correlation', breaks = pretty_breaks(n = 4))
   
   
   ## Plot plane limit setup (expand) ----
@@ -214,19 +215,24 @@ makeSubNetGraph <- function(subNet,
   
   ## Legend initialization -----
   gg <- gg + 
-    theme(legend.position  =  "bottom", 
-          legend.title = element_text(size = legend_font_size), 
-          legend.text = element_text(size = legend_font_size - 3, color = "black"), 
-          legend.background = element_rect(fill = "white")) + 
-    ### legend option removal ---- 
+    theme(
+      legend.position = "right",
+      legend.title = element_text(size = legend_font_size), 
+      legend.text = element_text(size = legend_font_size - 3, color = "black"), 
+      legend.background = element_rect(fill = "white"),
+      legend.box = "vertical",            # legends laid out horizontally
+      legend.box.just = "center",           # centered
+      legend.direction = "vertical",      # flow left → right first
+      legend.text.align = 0
+    ) +
     guides(
-      #\edge_color = guide_colorbar(title = title),  # Keep the colorbar legend for edges
-      #size = "none", 
-      edge_linetype = "none",                     # You should handle this in the geom
-      edge_arrow = "none",                        # Arrows should also be handled in the geom
-      #shape = "none",                             # Remove shape legend
-      #fill = "none",                              # Remove fill legend
-      #color = "none",                            # Remove other color legends
+      size = guide_legend(nrow = 2, byrow = TRUE),
+      edge_width = guide_legend(nrow = 2, byrow = TRUE),
+      edge_linetype = "none", 
+      edge_arrow = "none", 
+      shape = "none", 
+      fill = "none", 
+      color = "none"
     )
     
   

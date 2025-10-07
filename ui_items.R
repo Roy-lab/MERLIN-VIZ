@@ -384,6 +384,27 @@ networkViz_nodeColor_Radio <- function(){
     )))
 }
 
+networkViz_sampleSelect_Tag <- function(){
+  tags$div(
+    style = "display: flex; align-items: center;",
+    tags$h4("Select Sample"),
+    tags$div(
+      style = "margin-left: 1px;", # CC: moved make the icon and the label closer
+      bsButton("select_sample", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+      bsPopover("select_sample", "Additional Info",
+                "Select Sample and cell type of interest. If the All cells checkbox is checked, all expression data is used to compute correlation expression weight, and mean. Otherwise these values are specific to the subset of cells",
+                placement = "right",
+                options = list(
+                  container = "body",
+                  html = TRUE,
+                  template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                )
+      )
+    )
+  )
+}
+
+
 ### Node Node Expression Global Checkbox -----
 networkViz_nodeExpGlobal_Checkbox <- function(){
   checkboxInput("global", TRUE, label = tags$div(
@@ -481,6 +502,8 @@ networkViz_nodeColor_Select<- function(palettes_nodes){
                 )))
 }
 
+
+
 ### Node max size slider -----
 networkViz_nodeSize_Slider <- function(){
   sliderInput(inputId = 'print_max_node_size', value = 8, min = 1, max = 25, 
@@ -562,7 +585,7 @@ networkViz_edgeRangeReg_Slider <- function(){
                   html = TRUE,
                   template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
                 )
-      ))), min = -10, max = 10, value = c(-5,5), step = 0.1)
+      ))), min = -0.25, max = 0.25, value = c(-0.1, 0.1), step = 0.01)
 }
 
 ### Edge color range correlation slider -----
@@ -600,7 +623,7 @@ networkViz_edgeRangeAbsCorr_Slider <- function(){
                   html = TRUE,
                   template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
                 )
-      ))), min = 0, max = 4, value = 1, step = 0.1)
+      ))), min = 0, max = 10, value = 3, step = 0.1)
 }
 
 ### Edge width slider ----- 
@@ -710,7 +733,7 @@ networkViz_legendSize_Slider <- function(){
                   html = TRUE,
                   template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
                 )
-      ))), min = 0, max = 25, value = 18, step = 1)
+      ))), min = 0, max = 25, value = 12, step = 1)
 }
 
 
@@ -1033,7 +1056,7 @@ heatmapViz_fontSize_Slider <- function(){
                   html = TRUE,
                   template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
                 )
-      ))), min = 0, max = 25, value = 18, step = 1)
+      ))), min = 0, max = 25, value = 12, step = 1)
 }
 
 ### Heatmap image height slider -----
