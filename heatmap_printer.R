@@ -10,8 +10,8 @@ library(gridExtra)
 
 makeSubgraphHeatmap <- function(subNet,
   display_name = 1, 
-  edge_color_by = NA, 
-  edge_color_palette = "RdBu", 
+  #edge_color_by = NA, 
+  #edge_color_palette = "RdBu", 
   font_size = 18, 
   direction = 1, 
   expression_color_palette = "RdBu", 
@@ -32,12 +32,12 @@ makeSubgraphHeatmap <- function(subNet,
     return(ggplot())
   }
   
-  if(edge_color_by == "Correlation"){
-    scale_edge_color <- c(-1, 1)
-  }
+  #if(edge_color_by == "Correlation"){
+  #  scale_edge_color <- c(-1, 1)
+  #}
   
   sym_node_name_by <- ifelse(is.na(node_name_by), NA, sym(node_name_by))
-  sym_edge_color_by <- ifelse(is.na(edge_color_by), NA, sym(edge_color_by))
+  #sym_edge_color_by <- ifelse(is.na(edge_color_by), NA, sym(edge_color_by))
   
   
   subNet_nodes <- subNet %N>% mutate(component = group_components())  %>% as_tibble() %>% 
@@ -125,7 +125,7 @@ makeSubgraphHeatmap <- function(subNet,
       theme(
         axis.title = element_blank(), 
         axis.ticks.x = element_blank(), 
-        axis.text.x = element_blank(),
+        axis.text.x = element_text(size = figure_font_size, angle = 90),
         axis.text.y = element_text(size = figure_font_size), 
         legend.text = element_text(size = figure_font_size - 3),
         legend.title = element_text(size = figure_font_size),
@@ -160,36 +160,37 @@ makeSubgraphHeatmap <- function(subNet,
   gg <- gg + plot_layout(ncol = 1, nrow = length(plot_list), heights = num_genes_list,guides = 'collect')
 
           
-  gene_order <- fct_c(tar_gene_order, reg_gene_order, tar_gene_order)
+  #gene_order <- fct_c(tar_gene_order, reg_gene_order, tar_gene_order)
+  #   
+  # ## Set up network visualization 
+  # subNet <- subNet  %N>% mutate(feature = factor(feature, levels(gene_order))) %>% 
+  #   arrange(feature) %>%  
+  #   mutate(`Common Name` = factor(`Common Name`, levels = `Common Name`)) %>% 
+  #   mutate(y = 0.5:1:nrow(subNet %N>% as_tibble())) #%E>% 
+  #   #mutate(forward_alpha = ifelse(.N()$y[from] > .N()$y[to], 0, 1)) %>% 
+  #   #mutate(reverse_alpha = ifelse(.N()$y[from] < .N()$y[to], 0, 1))
+  # 
+  # 
+  # net <- ggraph(subNet, x = 0, y = y, layout = "manual") +
+  #   geom_edge_arc(aes(color = !!sym_edge_color_by), arrow = arrow(angle = 15, ends ='last', length = unit(0.15, "inches"), type = 'closed'), strength = -0.05) + 
+  #   geom_edge_arc(aes(color = !!sym_edge_color_by), arrow = arrow(angle = 15, ends ='last', length = unit(0.15, "inches"), type = 'closed'), strength = 0.05) +  
+  #   #geom_node_point() + 
+  #   scale_y_continuous(expand = c(0,0), limits = c(0, max(subNet %N>% as_tibble %>% pull(y)) + .5)) + 
+  #   scale_x_continuous(expand = c(.05,.05), limits = c(NA, 0)) + 
+  # 
+  #   scale_edge_color_distiller(palette = edge_color_palette, direction = -1, limits = scale_edge_color) + 
+  #   scale_alpha_continuous(limits = c(0, 1), range= c(0, 1)) + 
+  #   theme_void() + 
+  #   theme(
+  #     legend.position = "left",
+  #     legend.text = element_text(size = figure_font_size - 3),
+  #     legend.title = element_text(size = figure_font_size),
+  #     plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'npc')
+  #   )
     
-  ## Set up network visualization 
-  subNet <- subNet  %N>% mutate(feature = factor(feature, levels(gene_order))) %>% 
-    arrange(feature) %>%  
-    mutate(`Common Name` = factor(`Common Name`, levels = `Common Name`)) %>% 
-    mutate(y = 0.5:1:nrow(subNet %N>% as_tibble())) #%E>% 
-    #mutate(forward_alpha = ifelse(.N()$y[from] > .N()$y[to], 0, 1)) %>% 
-    #mutate(reverse_alpha = ifelse(.N()$y[from] < .N()$y[to], 0, 1))
-  
-  
-  net <- ggraph(subNet, x = 0, y = y, layout = "manual") +
-    geom_edge_arc(aes(color = !!sym_edge_color_by), arrow = arrow(angle = 15, ends ='last', length = unit(0.15, "inches"), type = 'closed'), strength = -0.05) + 
-    geom_edge_arc(aes(color = !!sym_edge_color_by), arrow = arrow(angle = 15, ends ='last', length = unit(0.15, "inches"), type = 'closed'), strength = 0.05) +  
-    #geom_node_point() + 
-    scale_y_continuous(expand = c(0,0), limits = c(0, max(subNet %N>% as_tibble %>% pull(y)) + .5)) + 
-    scale_x_continuous(expand = c(.05,.05), limits = c(NA, 0)) + 
-  
-    scale_edge_color_distiller(palette = edge_color_palette, direction = -1, limits = scale_edge_color) + 
-    scale_alpha_continuous(limits = c(0, 1), range= c(0, 1)) + 
-    theme_void() + 
-    theme(
-      legend.position = "left",
-      legend.text = element_text(size = figure_font_size - 3),
-      legend.title = element_text(size = figure_font_size),
-      plot.margin = margin(t = 0, r = 0, b = 0, l = 0, unit = 'npc')
-    )
-    
-  gg_combine <- (net | gg) + 
-    plot_layout(ncol = 2, widths = c(1, 5))
+  #gg_combine <- (net | gg) + 
+  #  plot_layout(ncol = 2, widths = c(1, 5))
 
+  gg_combine <- gg 
   return(gg_combine)
 }
