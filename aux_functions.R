@@ -5,18 +5,18 @@ library(DT)
 
 
 
-#all_nodes_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_nodes.txt"
-#edge_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/output_net_0_8.txt"
-#module2gene_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset.txt"
-#module_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/consensus_module_0_3_geneset_enrichAnalyzer.txt"
-#go_file = "/Volumes/wid/projects7/Roy-Aspergillus/Data/GeneOntology/GO_enrichAnalyzer_idx_v2/afumgotermap.txt"
-#regulator_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments_v2/merlin.0_8.0_3_details.txt"
-#go_enrich_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/MerlinpResults/Afum_RnaSeq_results/Condor_results/PostBatchCorr_I02/Lambda_0100/Enrichments_v2/go.0_3_details.txt"
-#gene2genename_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_name_map_nancy.txt"
-#gene_desc_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Data/gene_description_file.txt"
-#regulator_list_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_transcription_factors.tsv"
-#expression_file <- "/Volumes/wid/projects7/Roy-Aspergillus/Results/RnaSeq/NcaResults/Output_20211122111849/Lambda_0100/Merlinp_inputs/net1_expression_T_allLabels.txt" 
-
+prefix <- "/Volumes/"
+all_nodes_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/data/katie_t_cells/genes_filtered.txt", sep = "")
+edge_list_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/network_0.8.txt", sep = "")
+module2gene_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/consensus_module_0.1_geneset.txt", sep = "")
+module_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/consensus_module_0.1_geneset_enrichAnalyzer.txt", sep = "")
+go_file = paste(prefix, "wid/projects2/Roy-common/data/data_new/human/go/hg38/hg38_goterms_regnet.txt", sep = "")
+regulator_enrich_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/regulator_enrichAnalysis_0.1_details.txt", sep = "")
+go_enrich_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/results/MERLIN/katie_t_cells/consensus/enrichAnalysis_0.1_details.txt", sep = "")
+gene2genename_file <- NA
+gene_desc_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/data/gene_annotations/gene_names.txt", sep = "")
+regulator_list_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/data/katie_t_cells/regulators_intersected_with_transgene.txt", sep = "")
+expression_file <- paste(prefix, "wid/projects7/Roy-singlecell2/sahalab/Tcell/jeremy_work/data/katie_t_cells/expression_geneids_subset_filtered_barcodes_transposed_sample_and_transgene_sorted_RV_NV_only_zero_mean.txt", sep = "")
 
 title <- "Merlin-Viz"
 
@@ -36,9 +36,7 @@ genes2modules <- genes2modules %>%
   filter(count > 4) %>%
   select(feature, module)
 
-go <- read_tsv(go_file, col_names = TRUE) %>% 
-  rename("feature"= "GeneName") %>% 
-  rename("go" = "GOTerm") %>% 
+go <- read_tsv(go_file, col_names = c("feature", "go"), skip = 1, ) %>% 
   select(feature, go)
 
 go_IC <- go %>% 
@@ -59,27 +57,37 @@ regulators <- read_tsv(regulator_list_file, col_names = FALSE) %>%
   mutate(regulator = TRUE)
 
 
-
-gene_map <- read_tsv(gene2genename_file, col_names = FALSE) %>%
-  rename("feature" = "X1", "Common Name" = "X2")
+if(!is.na(gene2genename_file)){
+  gene_map <- read_tsv(gene2genename_file, col_names = FALSE) %>%
+    rename("feature" = "X1", "Common Name" = "X2")
+}
 
 gene_desc <- read_tsv(gene_desc_file, col_names = c("feature", "Description")) #%>%
-  rename("feature" = "X1", "Description" = "X2")
+  #rename("feature" = "X1", "Description" = "X2")
   
 nodes <- read_tsv(file = all_nodes_file, col_names = "feature") %>% 
           rowid_to_column("id") %>%
           left_join(genes2modules) %>%
           left_join(go) %>%
-          left_join(gene_map) %>%
+          #left_join(gene_map) %>%
           left_join(gene_desc) %>%
           left_join(regulators) 
+
+if(is.na(gene2genename_file))
+{
+  nodes <- nodes %>% 
+    mutate(`Common Name` = feature) 
+}else
+{
+  nodes <- nodes %>% 
+    left_join(gene_map, by = "feature") %>%
+    mutate(`Common Name` = ifelse(is.na(`Common Name`), feature, `Common Name`))
+
+}
 
 nodes$regulator <- sapply(nodes$regulator, function(x){ifelse(is.na(x), 'tar', 'scr')})
 nodes$module <- sapply(nodes$module, function(x){ifelse(is.na(x), -9999, x)})
 
-nodes$`Common Name`[which(is.na(nodes$`Common Name`))] = nodes$feature[which(is.na(nodes$`Common Name`))]
-nodes$geneSuper <- str_sub(nodes$`Common Name`, 1, 3)
-nodes <- nodes %>% mutate(geneSuper = str_replace(geneSuper,'AFU', "Unlabeled"))
 
 nca_idx <- which(grepl('_nca', nodes$feature))
 for(idx in nca_idx){
@@ -91,10 +99,10 @@ for(idx in nca_idx){
   nodes$Description[idx] <-nodes$Description[str_idx]
 } 
 
-gene_map <- nodes %>% filter( !grepl('AFUA_', `Common Name`)) 
-common_name = gene_map$`Common Name`
-feature_name = gene_map$feature
-genename_map <- tibble(common_name, feature_name)
+#gene_map <- nodes %>% filter( !grepl('AFUA_', `Common Name`)) 
+#common_name = gene_map$`Common Name`
+#feature_name = gene_map$feature
+genename_map <- tibble(common_name = nodes$`Common Name`, feature_name = nodes$feature)
 
 ## load in Expression matrix 
 expression <- read_tsv(expression_file) %>% 
