@@ -7,6 +7,7 @@ library(DT)
 library(Matrix)
 library(data.table)
 
+source('aux_function.R')
 
 ### Files used for netData generation. 
 prefix <- "/Volumes/"
