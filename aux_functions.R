@@ -265,18 +265,18 @@ makePostProcessDataStruct <- function (all_nodes_file, edge_list_file,
                           module2gene_file = NULL, go_file = NULL, module_file, 
                           regulator_enrich_file, go_enrich_file, 
                           Ortholog_1_to_1_file = NULL, Ortholog_file = NULL, 
-                          gene2genename_file, gene_desc_file = NULL, regulator_list_file = NULL, expression_data, grouping_indices)
+                          gene2genename_file=NULL, gene_desc_file = NULL, regulator_list_file = NULL, expression_data, grouping_indices)
 {
 
 ## Generate Nodes ----- 
 nodes <- makeNodes(all_nodes_file,
-   module2gene_file = NULL,
-   go_file = NULL,
-   regulator_list_file = NULL,
-   gene_desc_file = NULL,
-   gene2genename_file = NULL,
-   Ortholog_1_to_1_file = NULL,
-   Ortholog_file = NULL)
+   module2gene_file,
+   go_file,
+   regulator_list_file,
+   gene_desc_file,
+   gene2genename_file,
+   Ortholog_1_to_1_file,
+   Ortholog_file)
 
 ## Generate Edges ----
 edges <- makeEdges(edge_list_file, nodes)
