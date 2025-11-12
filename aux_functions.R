@@ -12,20 +12,22 @@ Ortholog_1_to_1_file <- NULL
 Ortholog_file <- NULL
 
 ################### MERLIN_VIZ DEFAULTS FOR SCALES #############################
-title <- "Junha's Project"
+title <- "Changa's Sorghum dataset"
+
 default_edge_color_pallette <- "RdBu"
-default_gene <- "AACS"
-default_expression_heatmap <- "RdBu"
-default_expression_range <- c(-5, 5)
-default_expression_min <- -5
+default_gene <- "Sobic.001G000200.v3.2"
+
+default_expression_heatmap <- "Reds"
+default_expression_range <- c(0, 5)
+default_expression_min <- 0
 default_expression_max <- 5
 default_tfa_palette_heatamp <- "PiYG"
 default_tfa_range <- c(-2, 2)
 default_tfa_min <- -10
 default_tfa_max <- 10
-default_node_color_pallette <- "RdBu"
+default_node_color_pallette <- "Reds"
 default_node_color_qual_pallette <- "Set2"
-default_node_color_quant_pallette <- "RdBu"
+default_node_color_quant_pallette <- "Reds"
 
 
 ### Prepare expression data object (single cell)
@@ -209,7 +211,8 @@ makeNet <- function(nodes, edges)
 ## Add expression to nets
 addExpression <- function(Net, expression_data, grouping_indices, save_struct = FALSE)
 {
-  gene_names <- expression_data$GeneID
+  browser()
+  gene_names <- pull(expression_data[, 1])
   expression_data <- as.matrix(expression_data[, -1, with = FALSE])
   rownames(expression_data) <- gene_names # Turn into matrix
 

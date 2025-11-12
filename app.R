@@ -624,7 +624,7 @@ server <- function(input, output, session) {
                         nudge_y = input$print_nudge_y, text_angle = input$print_text_angle, show_legend = TRUE,
                         expand_x = input$print_expand_x, expand_y = input$print_expand_y, color_scale_limits = edge_color_range, 
                         node_scale_limits = input$exp_color_scale,
-                        legend_font_size = input$legend_font_size)
+                        legend_font_size = input$legend_font_size, direction = 1)
       )
       gg_out_plot()
     }

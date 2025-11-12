@@ -55,7 +55,9 @@ makeSubNetGraph <- function(subNet,
   
   
   
-  ## Edges display ---- 
+  ## Edges display ----
+  
+  if(names_in_nodes == TRUE){
   gg <- gg +
       geom_edge_parallel(aes(color  = !!sym_edge_color_by, 
                          start_cap = label_rect(node1.display_name, fontsize = font_size), 
@@ -63,7 +65,15 @@ makeSubNetGraph <- function(subNet,
                      arrow = arrow(angle = 15, ends ='last', length = unit(.5, "lines"), type = 'closed'), 
                      #end_cap =  circle(2, 'mm'),
                      show.legend = TRUE)
-  
+  }
+  else{
+    gg <- gg +
+      geom_edge_parallel(aes(color  = !!sym_edge_color_by, 
+                             edge_width = abs(!!sym_edge_width_by)), 
+                         arrow = arrow(angle = 15, ends ='last', length = unit(.5, "lines"), type = 'closed'), 
+                         #end_cap =  circle(2, 'mm'),
+                         show.legend = TRUE)
+  }
   
   ## Nodes display ---- 
   ### Node with color and size ----
