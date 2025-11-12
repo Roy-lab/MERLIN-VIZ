@@ -211,7 +211,6 @@ makeNet <- function(nodes, edges)
 ## Add expression to nets
 addExpression <- function(Net, expression_data, grouping_indices, save_struct = FALSE)
 {
-  browser()
   gene_names <- pull(expression_data[, 1])
   expression_data <- as.matrix(expression_data[, -1, with = FALSE])
   rownames(expression_data) <- gene_names # Turn into matrix
