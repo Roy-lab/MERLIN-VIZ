@@ -46,7 +46,11 @@ prepareCellMapping <- function(expression_data, cell_mapping_file, save_struct =
 {
 cell_barcodes_ordered <- colnames(expression_data)[2:length(expression_data)]
 
-cell_mapping <- read_tsv(cell_mapping_file, col_names = c("barcodes", "grouping"))
+cell_mapping <- read_tsv(cell_mapping_file, col_names = c("barcodes", "grouping")) %>% 
+	rowwise() %>%
+	mutate(grouping = ifelse(is.integer(grouping), paste0('C', grouping), grouping)) %>% 
+	ungroup() 
+
 index_set <- cell_mapping %>% 
   mutate(index = sapply(barcodes, function(x){
     which(x == cell_barcodes_ordered)
