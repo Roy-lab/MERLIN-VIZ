@@ -173,9 +173,11 @@ makeNodes <- function(all_nodes_file,
     node_name <- nodes$feature[idx]
     str_name <- str_remove(node_name, '_nca')
     str_idx <- which(str_name == nodes$feature)
-    nodes$go[idx] <- nodes$go[str_idx]
-    nodes$`Common Name`[idx] <- str_c(nodes$`Common Name`[str_idx], '_nca')
-    nodes$Description[idx] <-nodes$Description[str_idx]
+    if(length(str_idx) > 0 ){
+      nodes$go[idx] <- nodes$go[str_idx]
+      nodes$`Common Name`[idx] <- str_c(nodes$`Common Name`[str_idx], '_nca')
+      nodes$Description[idx] <-nodes$Description[str_idx]
+    }
   } 
   
   return(nodes)
