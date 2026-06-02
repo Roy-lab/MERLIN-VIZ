@@ -12,10 +12,10 @@ Ortholog_1_to_1_file <- NULL
 Ortholog_file <- NULL
 
 ################### MERLIN_VIZ DEFAULTS FOR SCALES #############################
-title <- "Changa's Sorghum dataset"
+title <- "MERLIN Bookchapter: Mouse Reprogramming FBS+A2S dataset"
 
 default_edge_color_pallette <- "RdBu"
-default_gene <- "Sobic.001G000200.v3.2"
+default_gene <- "Sept11"
 
 default_expression_heatmap <- "Reds"
 default_expression_range <- c(0, 5)
@@ -28,7 +28,6 @@ default_tfa_max <- 10
 default_node_color_pallette <- "Reds"
 default_node_color_qual_pallette <- "Set2"
 default_node_color_quant_pallette <- "Reds"
-
 
 ### Prepare expression data object (single cell)
 prepareExpression <- function(expression_file, save_struct = TRUE)
@@ -273,7 +272,8 @@ makePostProcessDataStruct <- function (all_nodes_file, edge_list_file,
                           module2gene_file = NULL, go_file = NULL, module_file, 
                           regulator_enrich_file, go_enrich_file, 
                           Ortholog_1_to_1_file = NULL, Ortholog_file = NULL, 
-                          gene2genename_file=NULL, gene_desc_file = NULL, regulator_list_file = NULL, expression_data, grouping_indices)
+                          gene2genename_file=NULL, gene_desc_file = NULL, regulator_list_file = NULL, expression_data, grouping_indices, 
+                          outfile = "net_data.Rdata")
 {
 
 ## Generate Nodes ----- 
@@ -360,7 +360,7 @@ genename_map <- genename_map %>% rename(
  ungroup()
 
 
-save(list = c("Net", "Module", "enriched_go_terms", "module_ids","enrich_2_module", "genes", "genename_map"), file = "net_data.Rdata")
+save(list = c("Net", "Module", "enriched_go_terms", "module_ids","enrich_2_module", "genes", "genename_map"), file = outfile)
 
 return(list(Net, Module, enriched_go_terms, module_ids, enrich_2_module, genes, genename_map)) 
 }
@@ -936,11 +936,5 @@ prepModuleTable <- function(Module_Table, method, disp_num  = 5 ){
   }
   return(Module_Table)
 }
-
-
-if(file.exists('net_data.Rdata')){
-  load('net_data.Rdata')
-}
-
 
 

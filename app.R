@@ -1,4 +1,4 @@
-#spencers new version that im changing but now adding new tabs
+#new version that im changing but now adding new tabs
 
 library(shiny)
 library(tools)
@@ -23,6 +23,11 @@ source('printerFunction.R')
 source('heatmap_printer.R')
 source('heatmap_printer_dynamic.R')
 source('ui_items.R')
+
+# Load in data object ---- 
+#CHANGE NAME OF OBJECT BELOW TO MATCH OUTPUT!!!  (net_data.Rdata is default)
+load('net_data.Rdata') 
+
 
 ## Initialize global variables ----
 all_gene_names <- unique(c(genes, genename_map$common_name))
@@ -122,6 +127,7 @@ ui <- navbarPage(title,
                                         networkViz_expColor_Slider(limits = default_expression_range)
                                      ),
                                      networkViz_nodeColor_Select(palettes_nodes),
+                                     networkViz_nodePaletteDirection_Checkbox(),
                                      networkViz_nodeSize_Slider(),
                                      networkViz_nodeFontSize_Slider()
                               ),
@@ -141,7 +147,8 @@ ui <- navbarPage(title,
                                      networkViz_edgeRangeReg_Slider(),
                                      networkViz_edgeRangeAbsCorr_Slider(),
                                      #networkViz_edgeWidth_Slider(), 
-                                     networkViz_edgePalette_Select(palettes_edges)
+                                     networkViz_edgePalette_Select(palettes_edges),
+                                     networkViz_edgePaletteDirection_Checkbox()
                                ),
                               
                               ### Save Setting -------
@@ -612,18 +619,22 @@ server <- function(input, output, session) {
       # }
       edge_color_range = input$edge_color_range_reg
       
+      direction_node <- ifelse(input$direction_node, -1, 1)
+      direction_edge <- ifelse(input$direction_edge, -1, 1)
+      
       gg_out_plot(
         makeSubNetGraph(subNet, names_in_nodes = input$print_name_bool, node_color_by = node_color_by, 
                         edge_color_by = edge_color_by, edge_color_palette = input$edge_color_palette, 
                         edge_width_by = edge_width_by, max_edge_width = input$edge_range_abs_corr, 
                         node_color_palette = input$print_node_pal, 
                         node_size_by = node_size_by, max_node_size = input$print_max_node_size, 
+                        node_direction  = direction_node, 
                         layout = input$print_layout, focus_nodes = list(), 
                         font_size = input$print_font_size, 
                         nudge_y = input$print_nudge_y, text_angle = input$print_text_angle, show_legend = TRUE,
                         expand_x = input$print_expand_x, expand_y = input$print_expand_y, color_scale_limits = edge_color_range, 
                         node_scale_limits = input$exp_color_scale,
-                        legend_font_size = input$legend_font_size, direction = 1)
+                        legend_font_size = input$legend_font_size, edge_direction = direction_edge)
       )
       gg_out_plot()
     }

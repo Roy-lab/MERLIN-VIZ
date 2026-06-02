@@ -522,7 +522,6 @@ networkViz_nodeColor_Select<- function(palettes_nodes){
 }
 
 
-
 ### Node max size slider -----
 networkViz_nodeSize_Slider <- function(){
   sliderInput(inputId = 'print_max_node_size', value = 8, min = 1, max = 25, 
@@ -564,6 +563,26 @@ networkViz_nodeFontSize_Slider <- function(){
                   )
                 )))
 } 
+
+
+networkViz_nodePaletteDirection_Checkbox <- function(){
+  checkboxInput(inputId = 'direction_node',
+                label = tags$div(
+                  style = "display: flex; align-items: left;",
+                  tags$h4("Node palette direction"),
+                  tags$div(
+                    style = "margin-left: 1px;", 
+                    bsButton("node_direction_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                    bsPopover("node_direction_info", "Additional Info",
+                              "Reverses node palette direction",
+                              placement = "right",
+                              options = list(
+                                container = "body",
+                                html = TRUE,
+                                template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                              )))))
+}
+
 
 
 ## Edge features -----
@@ -686,9 +705,23 @@ networkViz_edgePalette_Select <- function(palettes_edges){
 }
 
 
-
-
-
+networkViz_edgePaletteDirection_Checkbox <- function(){
+  checkboxInput(inputId = 'direction_edge', 
+                label = tags$div(
+                  style = "display: flex; align-items: left;",
+                  tags$h4("Edge palette direction"),
+                  tags$div(
+                    style = "margin-left: 1px;", 
+                    bsButton("edge_direction_info", "", icon = icon("question-circle", class = "fa-lg"), style = "link"), 
+                    bsPopover("edge_direction_info", "Additional Info",
+                              "Reverses edge palette direction",
+                              placement = "right",
+                              options = list(
+                                container = "body",
+                                html = TRUE,
+                                template = '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content" style="width: 400px; height: 300px;"></div></div>'
+                              )))))
+}
 
 
 ## Figure Save features ----

@@ -12,11 +12,12 @@ makeSubNetGraph <- function(subNet,
                             edge_width_by = NA, 
                             edge_color_palette = "RdBu", 
                             node_color_palette = 'Dark2', 
+                            node_direction = -1,
                             max_edge_width = NA, 
                             node_size_by = NA, max_node_size = 5,
                             edge_width = 1, 
                             layout = 'dh', focus_nodes = list(), 
-                            font_size = 18, nudge_y = 0, text_angle  = 0, show_legend = TRUE, direction = -1,
+                            font_size = 18, nudge_y = 0, text_angle  = 0, show_legend = TRUE, edge_direction = -1,
                             expand_x = 0, expand_y = 0, font_color = '#ffffff', unlab_color = '#000000', 
                             node_scale_limits = c(-5, 5), 
                             color_scale_limits = c(-5,5) , legend_font_size = 18)
@@ -161,7 +162,7 @@ makeSubNetGraph <- function(subNet,
     }
   ### Node by gene expression value (continuous)  ----
   }else if(node_color_by %in% c("exp","mean_expression")){
-    gg <- gg + scale_fill_distiller(palette = node_color_palette, oob = scales::squish, limits=node_scale_limits, direction = direction)
+    gg <- gg + scale_fill_distiller(palette = node_color_palette, oob = scales::squish, limits=node_scale_limits, direction = node_direction)
     skip_discrete_palette <- TRUE
   ### Node by node type (discrete) ------  
   }else{
@@ -188,7 +189,7 @@ makeSubNetGraph <- function(subNet,
   #}else if(edge_color_by == "Reg_weight") {
   #  gg <- gg + scale_edge_color_distiller(palette = edge_color_palette, direction = -1, limits = color_scale_limits, oob = scales::squish)
   }else{
-    gg <- gg + scale_edge_color_distiller(palette = edge_color_palette, direction = direction, limits = color_scale_limits, oob = scales::squish, name = "Regression Weight")
+    gg <- gg + scale_edge_color_distiller(palette = edge_color_palette, direction = edge_direction, limits = color_scale_limits, oob = scales::squish, name = "Regression Weight")
   }
   
   ## Node size scale ----
