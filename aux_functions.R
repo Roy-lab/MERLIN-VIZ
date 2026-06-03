@@ -15,7 +15,7 @@ Ortholog_file <- NULL
 title <- "MERLIN Bookchapter: Mouse Reprogramming FBS+A2S dataset"
 
 default_edge_color_pallette <- "RdBu"
-default_gene <- "Sept11"
+default_gene <- "Egr1"
 
 default_expression_heatmap <- "Reds"
 default_expression_range <- c(0, 5)

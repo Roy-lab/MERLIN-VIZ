@@ -1,0 +1,1 @@
+Cluster1002	localization	0.011551	0.0346531	1959	453	5	4	3.4596	Ap1m2;Bspry;Crb3;St14
